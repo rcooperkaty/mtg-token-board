@@ -200,7 +200,25 @@
       gap: 10px;
       align-content: flex-start;
     }
+	.counter-controls {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
 
+.counter-btn {
+  background: #222;
+  border: 1px solid #444;
+  color: #ddd;
+  padding: 2px 4px;
+  font-size: 10px;
+  border-radius: 4px;
+}
+
+.counter-btn.plus { border-color: #4caf50; }
+.counter-btn.minus { border-color: #d64541; }
+.counter-btn.remove { opacity: 0.7; }
     .token {
       aspect-ratio: 5/7;
       position: relative;
@@ -521,6 +539,10 @@
       list.innerHTML = "";
 
       tokens.forEach((t, i) => {
+        // Backward compatibility for old saves
+        t.plusCounters = t.plusCounters || 0;
+        t.minusCounters = t.minusCounters || 0;
+
         const card = document.createElement("div");
         card.className = "token";
         card.dataset.color = t.color;
@@ -545,7 +567,9 @@
 
         const pt = document.createElement("div");
         pt.className = "token-pt";
-        pt.textContent = `${t.power}/${t.toughness}`;
+        const effP = t.power + t.plusCounters - t.minusCounters;
+        const effT = t.toughness + t.plusCounters - t.minusCounters;
+        pt.textContent = `${effP}/${effT}`;
         card.appendChild(pt);
 
         if (t.summoning) {
@@ -561,6 +585,56 @@
           h.textContent = "Haste";
           card.appendChild(h);
         }
+
+        // Counter controls
+        const ctrls = document.createElement("div");
+        ctrls.className = "counter-controls";
+
+        const plusBtn = document.createElement("button");
+        plusBtn.textContent = "+1/+1";
+        plusBtn.className = "counter-btn plus";
+        plusBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          t.plusCounters++;
+          save();
+          render();
+        });
+
+        const minusBtn = document.createElement("button");
+        minusBtn.textContent = "-1/-1";
+        minusBtn.className = "counter-btn minus";
+        minusBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          t.minusCounters++;
+          save();
+          render();
+        });
+
+        const removePlus = document.createElement("button");
+        removePlus.textContent = "– +1/+1";
+        removePlus.className = "counter-btn remove";
+        removePlus.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (t.plusCounters > 0) t.plusCounters--;
+          save();
+          render();
+        });
+
+        const removeMinus = document.createElement("button");
+        removeMinus.textContent = "– -1/-1";
+        removeMinus.className = "counter-btn remove";
+        removeMinus.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (t.minusCounters > 0) t.minusCounters--;
+          save();
+          render();
+        });
+
+        ctrls.appendChild(plusBtn);
+        ctrls.appendChild(minusBtn);
+        ctrls.appendChild(removePlus);
+        ctrls.appendChild(removeMinus);
+        card.appendChild(ctrls);
 
         // Tap/untap
         card.addEventListener("click", () => {
@@ -651,7 +725,9 @@
             haste,
             summoning,
             tapped: false,
-            imageUrl: null
+            imageUrl: null,
+            plusCounters: 0,
+            minusCounters: 0
           });
 
           save();
@@ -674,7 +750,9 @@
         haste,
         summoning,
         tapped: false,
-        imageUrl: null
+        imageUrl: null,
+        plusCounters: 0,
+        minusCounters: 0
       });
 
       save();
@@ -702,9 +780,10 @@
     presetSelect.dispatchEvent(new Event("change"));
     render();
 
+    // Service worker registration (for PWA)
     if ("serviceWorker" in navigator) {
-	  navigator.serviceWorker.register("./service-worker.js");
-}
+      navigator.serviceWorker.register("./service-worker.js");
+    }
 </script>
 </body>
 </html>
