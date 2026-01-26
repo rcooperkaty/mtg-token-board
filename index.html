@@ -369,7 +369,6 @@
         if(e.target.tagName === "BUTTON") return;
 
         // CHECK: Is it summoning sick?
-        // Note: We allow UNTAPPING even if sick (in case of error), but prevent TAPPING.
         if (t.summoning && !t.tapped) {
             // Shake visual feedback
             card.classList.add("shake");
@@ -400,10 +399,10 @@
         render();
       });
 
-      // --- 2. RIGHT CLICK: CONTEXT MENU ---
+      // --- 2. RIGHT CLICK: TOKEN CONTEXT MENU ---
       card.addEventListener("contextmenu", (e) => {
         e.preventDefault();
-        showContextMenu(e, t, index);
+        showTokenContextMenu(e, t, index);
       });
 
       // Image & Badges
@@ -499,10 +498,10 @@
     });
   }
 
-  // --- CONTEXT MENU LOGIC ---
+  // --- CONTEXT MENUS ---
   const ctxMenu = document.getElementById("context-menu");
 
-  function showContextMenu(e, token, index) {
+  function showTokenContextMenu(e, token, index) {
     const action = token.tapped ? "Untap" : "Tap";
 
     ctxMenu.innerHTML = `
@@ -704,6 +703,7 @@
     item.className = "preset-item";
     item.innerHTML = `<div style="width:10px; height:10px; border-radius:50%; background:${getColorCode(p.color)}; border:1px solid #555;"></div> <b>${p.name}</b> <span style="color:#888; margin-left:auto; font-size:10px;">${p.power}/${p.toughness}</span>`;
 
+    // Left Click: Fill Form
     item.onclick = () => {
       document.getElementById("name").value = p.name;
       document.getElementById("color").value = p.color;
@@ -714,6 +714,39 @@
       qtyBox.focus();
       qtyBox.select();
     };
+
+    // Right Click: Quick Create Menu
+    item.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+
+        ctxMenu.innerHTML = `<div class="ctx-item" id="ctx-quick-create">Quick Create ${p.name}</div>`;
+        ctxMenu.style.display = "block";
+
+        const x = Math.min(e.clientX, window.innerWidth - 170);
+        const y = Math.min(e.clientY, window.innerHeight - 50);
+        ctxMenu.style.left = `${x}px`;
+        ctxMenu.style.top = `${y}px`;
+
+        document.getElementById("ctx-quick-create").onclick = () => {
+            const id = crypto.randomUUID();
+            const token = {
+                id,
+                name: p.name,
+                qty: 1,
+                color: p.color,
+                power: p.power,
+                toughness: p.toughness,
+                haste: false,
+                summoning: true,
+                tapped: false,
+                counters: 0,
+                imagePath: `${p.name}.png`
+            };
+            addTokenToBoard(token);
+            ctxMenu.style.display = "none";
+        };
+    });
+
     presetPicker.appendChild(item);
   });
 
