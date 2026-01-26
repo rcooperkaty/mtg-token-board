@@ -27,7 +27,7 @@
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
-      -webkit-user-select: none; /* Helps prevent text selection on long press */
+      -webkit-user-select: none;
       user-select: none;
     }
 
@@ -58,11 +58,18 @@
     }
     button:active { transform: translateY(1px); }
 
+    #toggleSidebar { border: 1px solid #555; }
+
     /* --- LAYOUT --- */
     main {
       display: flex;
       flex: 1;
       overflow: hidden;
+    }
+
+    /* MAXIMIZE MODE: Hide Sidebar */
+    main.maximize .sidebar {
+        display: none !important;
     }
 
     .sidebar {
@@ -75,6 +82,7 @@
       padding: 12px;
       gap: 12px;
       flex-shrink: 0;
+      transition: width 0.2s; /* Smooth transition */
     }
 
     .battlefield {
@@ -91,9 +99,27 @@
       border-radius: 8px;
       padding: 12px;
       border: 1px solid var(--border);
+      margin-bottom: 12px;
     }
 
     h2 { margin: 0 0 10px; font-size: 15px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Accordion Header Style */
+    .accordion-header {
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 0;
+        padding-bottom: 0;
+    }
+    .accordion-header:hover { color: #fff; }
+
+    /* The hidden content container */
+    #customContent {
+        margin-top: 10px;
+        display: none;
+    }
 
     input, select {
       width: 100%;
@@ -123,7 +149,7 @@
       overflow: hidden;
     }
     .ctx-item {
-      padding: 12px 14px; /* Larger tap target for mobile */
+      padding: 12px 14px;
       font-size: 14px;
       cursor: pointer;
       border-bottom: 1px solid #333;
@@ -150,7 +176,7 @@
       cursor: pointer;
       font-size: 12px;
       border: 1px solid transparent;
-      touch-action: none; /* Prevents browser zoom/pan on double tap */
+      touch-action: none;
     }
     .preset-item:hover { border-color: #666; background: #2a2a2a; }
 
@@ -175,7 +201,6 @@
       color: #fff;
     }
 
-    /* Shake animation */
     @keyframes shake {
       0% { transform: translateX(0); }
       25% { transform: translateX(-4px); }
@@ -264,7 +289,6 @@
     .token-actions button.buff { color: #8f8; }
     .token-actions button.nerf { color: #f88; }
 
-    /* Version Footer */
     .version-tag {
         position: fixed;
         bottom: 5px;
@@ -282,6 +306,7 @@
         max-height: 250px;
         border-right: none;
         border-bottom: 1px solid var(--border);
+        overflow-y: scroll;
       }
       #tokenList { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
       .token { aspect-ratio: 4/6; }
@@ -293,6 +318,7 @@
 <header>
   <h1>Commander Tokens</h1>
   <div class="header-controls">
+    <button id="toggleSidebar">Hide Menu</button>
     <button id="nextTurn">Untap / Next Turn</button>
     <button id="clearTokens" style="color:#ff8888">Reset</button>
   </div>
@@ -306,31 +332,37 @@
       <div id="presetPicker" class="preset-picker"></div>
     </div>
 
-    <div class="panel">
-      <h2>Custom Token</h2>
-      <form id="tokenForm">
-        <input type="text" id="name" placeholder="Name" required />
-        <div style="display:flex; gap:8px;">
-          <input type="number" id="qty" value="1" min="1" placeholder="Qty" style="flex:1" />
-          <select id="color" style="flex:1">
-            <option value="white">White</option>
-            <option value="blue">Blue</option>
-            <option value="black">Black</option>
-            <option value="red">Red</option>
-            <option value="green">Green</option>
-            <option value="colorless">Colorless</option>
-          </select>
-        </div>
-        <div style="display:flex; gap:8px;">
-          <input type="number" id="power" value="1" placeholder="Pow" style="flex:1" />
-          <input type="number" id="toughness" value="1" placeholder="Tgh" style="flex:1" />
-        </div>
-        <input type="file" id="image" accept="image/*" />
-        <label style="font-size:12px; display:flex; align-items:center; gap:6px; margin-bottom:10px; cursor:pointer">
-          <input type="checkbox" id="haste"> Creature has Haste
-        </label>
-        <button type="submit" class="btn-green">Create Token</button>
-      </form>
+    <div class="panel" id="customPanel">
+      <h2 id="customHeader" class="accordion-header">
+        <span>Custom Token</span>
+        <span id="customArrow">▶</span>
+      </h2>
+
+      <div id="customContent">
+          <form id="tokenForm">
+            <input type="text" id="name" placeholder="Name" required />
+            <div style="display:flex; gap:8px;">
+              <input type="number" id="qty" value="1" min="1" placeholder="Qty" style="flex:1" />
+              <select id="color" style="flex:1">
+                <option value="white">White</option>
+                <option value="blue">Blue</option>
+                <option value="black">Black</option>
+                <option value="red">Red</option>
+                <option value="green">Green</option>
+                <option value="colorless">Colorless</option>
+              </select>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <input type="number" id="power" value="1" placeholder="Pow" style="flex:1" />
+              <input type="number" id="toughness" value="1" placeholder="Tgh" style="flex:1" />
+            </div>
+            <input type="file" id="image" accept="image/*" />
+            <label style="font-size:12px; display:flex; align-items:center; gap:6px; margin-bottom:10px; cursor:pointer">
+              <input type="checkbox" id="haste"> Creature has Haste
+            </label>
+            <button type="submit" class="btn-green">Create Token</button>
+          </form>
+      </div>
     </div>
   </div>
 
@@ -339,11 +371,49 @@
   </div>
 </main>
 
-<div class="version-tag">v1.1 (Long Press Support)</div>
-
+<div class="version-tag">v1.4 (Full Screen Mode)</div>
 <div id="context-menu"></div>
 
 <script>
+  // --- LAYOUT LOGIC ---
+  const toggleBtn = document.getElementById("toggleSidebar");
+  const mainEl = document.querySelector("main");
+
+  toggleBtn.onclick = () => {
+    mainEl.classList.toggle("maximize");
+    if(mainEl.classList.contains("maximize")) {
+        toggleBtn.innerText = "Show Menu";
+    } else {
+        toggleBtn.innerText = "Hide Menu";
+    }
+  };
+
+  // --- ACCORDION LOGIC ---
+  const customHeader = document.getElementById("customHeader");
+  const customContent = document.getElementById("customContent");
+  const customArrow = document.getElementById("customArrow");
+
+  function toggleCustomPanel(state) {
+    const currentDisplay = window.getComputedStyle(customContent).display;
+    const isClosed = currentDisplay === "none";
+
+    let shouldOpen = isClosed;
+    if (state === true) shouldOpen = true;
+    if (state === false) shouldOpen = false;
+
+    if (shouldOpen) {
+        customContent.style.display = "block";
+        customArrow.innerText = "▼";
+    } else {
+        customContent.style.display = "none";
+        customArrow.innerText = "▶";
+    }
+  }
+
+  customHeader.onclick = () => toggleCustomPanel();
+
+
+  // --- APP STATE ---
   let tokens = [];
   let sessionImages = {};
   let selectedPresetImage = null;
@@ -352,7 +422,6 @@
     tokens = JSON.parse(localStorage.getItem("mtg_tokens")) || [];
   } catch { tokens = []; }
 
-  // --- LOGIC: SMART ADD & MERGE ---
   function addTokenToBoard(newToken) {
     const getImg = (t) => sessionImages[t.id] || t.imagePath || 'none';
     const sig = (t) => `${t.name}|${t.color}|${t.power}|${t.toughness}|${t.counters}|${t.haste}|${t.summoning}|${t.tapped}|${getImg(t)}`;
@@ -385,7 +454,6 @@
       card.className = `token ${t.tapped ? 'tapped' : ''}`;
       card.dataset.color = t.color;
 
-      // --- 1. CLICK: TAP HANDLER ---
       card.addEventListener("click", (e) => {
         if(e.target.tagName === "BUTTON") return;
 
@@ -411,13 +479,11 @@
         render();
       });
 
-      // --- 2. RIGHT CLICK: TOKEN CONTEXT MENU ---
       card.addEventListener("contextmenu", (e) => {
         e.preventDefault();
         showTokenContextMenu(e, t, index);
       });
 
-      // Image & Badges
       const imgContainer = document.createElement("div");
       imgContainer.className = "token-img-container";
 
@@ -507,7 +573,7 @@
     });
   }
 
-  // --- MENU DISPLAY LOGIC ---
+  // --- MENU LOGIC ---
   const ctxMenu = document.getElementById("context-menu");
 
   function showTokenContextMenu(e, token, index) {
@@ -560,7 +626,6 @@
     };
   }
 
-  // --- SHARED MENU HELPER ---
   function positionMenu(x, y) {
     ctxMenu.style.display = "block";
     const adjustedX = Math.min(x, window.innerWidth - 170);
@@ -599,7 +664,6 @@
     }
   });
 
-  // --- FORM HANDLER ---
   document.getElementById("tokenForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const name = document.getElementById("name").value;
@@ -624,6 +688,7 @@
       reader.onload = () => {
         sessionImages[id] = reader.result;
         addTokenToBoard(newToken);
+        toggleCustomPanel(false);
       };
       reader.readAsDataURL(file);
     } else {
@@ -632,6 +697,7 @@
         selectedPresetImage = null;
       }
       addTokenToBoard(newToken);
+      toggleCustomPanel(false);
     }
 
     document.getElementById("name").value = "";
@@ -639,7 +705,6 @@
     document.getElementById("name").focus();
   });
 
-  // Next Turn
   document.getElementById("nextTurn").addEventListener("click", () => {
     tokens.forEach(t => { t.summoning = false; t.tapped = false; });
     const consolidated = [];
@@ -734,22 +799,18 @@
     item.className = "preset-item";
     item.innerHTML = `<div style="width:10px; height:10px; border-radius:50%; background:${getColorCode(p.color)}; border:1px solid #555;"></div> <b>${p.name}</b> <span style="color:#888; margin-left:auto; font-size:10px;">${p.power}/${p.toughness}</span>`;
 
-    // --- RIGHT CLICK (DESKTOP) ---
     item.addEventListener("contextmenu", (e) => {
         e.preventDefault();
         showPresetContextMenu(e.clientX, e.clientY, p);
     });
 
-    // --- LONG PRESS (MOBILE) ---
     let timer = null;
     let isLongPress = false;
 
     item.addEventListener("touchstart", (e) => {
         isLongPress = false;
-        // Start 500ms timer
         timer = setTimeout(() => {
             isLongPress = true;
-            // Get touch coordinates (using first finger)
             const touch = e.touches[0];
             showPresetContextMenu(touch.clientX, touch.clientY, p);
         }, 500);
@@ -757,19 +818,13 @@
 
     item.addEventListener("touchend", (e) => {
         clearTimeout(timer);
-        if (isLongPress) {
-            e.preventDefault(); // Prevent click from firing if we just did a long press
-        }
+        if (isLongPress) e.preventDefault();
     });
 
-    item.addEventListener("touchmove", () => {
-        // If scrolling, cancel the long press
-        clearTimeout(timer);
-    });
+    item.addEventListener("touchmove", () => clearTimeout(timer));
 
-    // --- LEFT CLICK (FILL FORM) ---
+    // Left Click: Fill form & Open Custom Panel
     item.onclick = (e) => {
-      // If we just triggered a long press menu, don't fill the form
       if (isLongPress) return;
 
       document.getElementById("name").value = p.name;
@@ -777,7 +832,9 @@
       document.getElementById("power").value = p.power;
       document.getElementById("toughness").value = p.toughness;
       selectedPresetImage = `${p.name}.png`;
+
       const qtyBox = document.getElementById("qty");
+      toggleCustomPanel(true); // Force open the accordion
       qtyBox.focus();
       qtyBox.select();
     };
