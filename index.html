@@ -44,9 +44,10 @@
     }
 
     header h1 { font-size: 18px; margin: 0; }
-    .header-controls { display: flex; gap: 8px; }
+    .header-controls { display: flex; gap: 8px; align-items: center; }
 
-    button {
+    /* Shared style for Buttons and Link */
+    button, .header-link {
       background: #444;
       color: #eee;
       border: none;
@@ -55,8 +56,12 @@
       cursor: pointer;
       font-size: 14px;
       touch-action: manipulation;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      line-height: normal;
     }
-    button:active { transform: translateY(1px); }
+    button:active, .header-link:active { transform: translateY(1px); }
 
     #toggleSidebar { border: 1px solid #555; }
 
@@ -82,7 +87,7 @@
       padding: 12px;
       gap: 12px;
       flex-shrink: 0;
-      transition: width 0.2s; /* Smooth transition */
+      transition: width 0.2s;
     }
 
     .battlefield {
@@ -318,6 +323,7 @@
 <header>
   <h1>Commander Tokens</h1>
   <div class="header-controls">
+    <a href="https://github.com/rcooperkaty/mtg-token-board/blob/main/README.md" target="_blank" class="header-link">Instructions</a>
     <button id="toggleSidebar">Hide Menu</button>
     <button id="nextTurn">Untap / Next Turn</button>
     <button id="clearTokens" style="color:#ff8888">Reset</button>
@@ -371,7 +377,7 @@
   </div>
 </main>
 
-<div class="version-tag">v1.4 (Full Screen Mode)</div>
+<div class="version-tag">v1.5 (Inst. Link)</div>
 <div id="context-menu"></div>
 
 <script>
