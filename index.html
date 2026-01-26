@@ -300,6 +300,49 @@
       transform: rotate(-12deg);
       opacity: 0.85;
     }
+
+    /* -----------------------------------------
+	   iPHONE / SMALL-SCREEN OPTIMIZATION ONLY
+	   ----------------------------------------- */
+	@media (max-width: 600px) {
+
+	  html, body {
+	    height: 100vh;
+	    height: 100dvh; /* iPhone dynamic viewport */
+	    overflow: hidden; /* Prevent page scrolling */
+	    padding-bottom: env(safe-area-inset-bottom);
+	    padding-top: env(safe-area-inset-top);
+	  }
+
+	  #controls,
+	  #tokenForm {
+	    padding: 6px 10px;
+	    gap: 6px;
+	  }
+
+	  #controls button,
+	  #tokenForm button,
+	  #tokenForm input,
+	  #tokenForm select {
+	    padding: 6px;
+	    font-size: 14px;
+	  }
+
+	  #tokenList {
+	    flex: 1;
+	    overflow-y: auto;
+	    padding: 10px;
+	    display: grid;
+	    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+	    gap: 10px;
+	    justify-items: center;
+	  }
+
+	  .token {
+	    width: 95px;
+	    height: calc(95px * 1.4); /* preserve 5×7 ratio */
+	  }
+}
   </style>
 </head>
 <body>
