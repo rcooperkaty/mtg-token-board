@@ -3,380 +3,297 @@
 <head>
   <meta charset="UTF-8" />
   <title>Commander Token Board</title>
-  <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#111111">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111111">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
+    :root {
+      --bg-dark: #111;
+      --bg-panel: #181818;
+      --border: #333;
+      --accent: #2f7d32;
+    }
+
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #111;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg-dark);
       color: #eee;
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
     }
 
+    /* --- HEADER --- */
     header {
-      padding: 12px 16px;
-      background: #181818;
-      border-bottom: 1px solid #333;
+      padding: 10px 16px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+      flex-shrink: 0;
+      z-index: 10;
     }
 
-    header h1 {
-      font-size: 18px;
-      margin: 0;
-    }
+    header h1 { font-size: 18px; margin: 0; }
+    .header-controls { display: flex; gap: 8px; }
 
-    header button {
+    button {
       background: #444;
       color: #eee;
       border: none;
-      padding: 6px 10px;
+      padding: 8px 12px;
       border-radius: 4px;
       cursor: pointer;
       font-size: 14px;
+      touch-action: manipulation;
     }
+    button:active { transform: translateY(1px); }
 
-    header button:hover {
-      background: #666;
-    }
-
+    /* --- LAYOUT --- */
     main {
-      display: grid;
-      grid-template-columns: minmax(260px, 320px) 1fr;
-      gap: 12px;
-      padding: 12px;
+      display: flex;
+      flex: 1;
+      overflow: hidden;
     }
 
-    @media (max-width: 800px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Left panel: presets + form */
     .sidebar {
+      width: 300px;
+      background: #151515;
+      border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
+      overflow-y: auto;
+      padding: 12px;
       gap: 12px;
+      flex-shrink: 0;
     }
 
-	.fallback-icon {
-	  display: flex;
-	  align-items: center;
-	  justify-content: center;
-	  background: #333;
-	  color: #fff;
-	  font-size: 12px;
-	  font-weight: 700;
-	  width: 20px;
-	  height: 20px;
-	  border-radius: 4px;
-}
+    .battlefield {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      background: #0a0a0a;
+      position: relative;
+    }
+
+    /* --- PANELS & FORMS --- */
     .panel {
-      background: #181818;
+      background: var(--bg-panel);
       border-radius: 8px;
-      padding: 10px;
-      border: 1px solid #333;
+      padding: 12px;
+      border: 1px solid var(--border);
     }
 
-    .panel h2 {
-      margin: 0 0 8px;
-      font-size: 15px;
-    }
+    h2 { margin: 0 0 10px; font-size: 15px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    label {
-      display: block;
-      font-size: 12px;
-      margin-top: 6px;
-      margin-bottom: 2px;
-      color: #ccc;
-    }
-
-    input[type="text"],
-    input[type="number"],
-    select {
+    input, select {
       width: 100%;
       box-sizing: border-box;
-      padding: 6px;
+      padding: 8px;
+      margin-bottom: 8px;
       border-radius: 4px;
       border: 1px solid #444;
-      background: #111;
+      background: #222;
       color: #eee;
-      font-size: 13px;
     }
+    input:focus, select:focus { outline: 2px solid #555; border-color: transparent; }
 
-    input[readonly] {
-      background: #151515;
-      color: #aaa;
+    .btn-green { background: var(--accent); color: white; width: 100%; font-weight: bold; }
+    .btn-green:hover { background: #3f9d42; }
+
+    /* --- CONTEXT MENU --- */
+    #context-menu {
+      position: absolute;
+      display: none;
+      background: #222;
+      border: 1px solid #555;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+      z-index: 1000;
+      min-width: 160px;
+      overflow: hidden;
     }
-
-    input[type="file"] {
-      font-size: 12px;
-      color: #ccc;
-    }
-
-    button[type="submit"] {
-      margin-top: 10px;
-      width: 100%;
-      padding: 8px;
-      border-radius: 4px;
-      border: none;
-      background: #2f7d32;
-      color: #fff;
+    .ctx-item {
+      padding: 10px 14px;
       font-size: 14px;
       cursor: pointer;
+      border-bottom: 1px solid #333;
     }
+    .ctx-item:hover { background: #333; }
+    .ctx-item:last-child { border-bottom: none; }
+    .ctx-danger { color: #ff6b6b; }
 
-    button[type="submit"]:hover {
-      background: #3f9d42;
-    }
-
-    /* Preset picker */
-    #presetSearch {
-      width: 100%;
-      margin-bottom: 8px;
-    }
-
+    /* --- PRESETS --- */
     .preset-picker {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 6px;
-      max-height: 260px;
+      max-height: 250px;
       overflow-y: auto;
     }
-
     .preset-item {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       padding: 6px;
-      background: #202020;
-      border-radius: 6px;
+      background: #222;
+      border-radius: 4px;
       cursor: pointer;
-      border: 1px solid transparent;
       font-size: 12px;
+      border: 1px solid transparent;
     }
+    .preset-item:hover { border-color: #666; background: #2a2a2a; }
 
-    .preset-item:hover {
-      background: #2a2a2a;
-      border-color: #555;
-    }
-
-    .preset-icon {
-      width: 20px;
-      height: 20px;
-      border-radius: 3px;
-      background: #333;
-      flex-shrink: 0;
-      object-fit: cover;
-    }
-
-    .preset-label {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.2;
-    }
-
-    .preset-label span:first-child {
-      font-weight: 600;
-    }
-
-    .preset-label span:last-child {
-      font-size: 11px;
-      color: #aaa;
-    }
-
-    /* Battlefield */
+    /* --- TOKEN GRID --- */
     #tokenList {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 10px;
-      align-content: flex-start;
+      gap: 12px;
+      padding-bottom: 60px;
     }
-	.counter-controls {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
 
-.counter-btn {
-  background: #222;
-  border: 1px solid #444;
-  color: #ddd;
-  padding: 2px 4px;
-  font-size: 10px;
-  border-radius: 4px;
-}
-
-.counter-btn.plus { border-color: #4caf50; }
-.counter-btn.minus { border-color: #d64541; }
-.counter-btn.remove { opacity: 0.7; }
     .token {
-      aspect-ratio: 5/7;
       position: relative;
-      background: radial-gradient(circle at 30% 20%, #333, #111);
-      border-radius: 10px;
-      padding: 8px;
-      border: 1px solid #444;
-      min-height: 90px;
-      box-sizing: border-box;
-      overflow: hidden;
-      cursor: pointer;
+      aspect-ratio: 5/7;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      padding: 6px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      user-select: none;
+      transition: transform 0.2s ease, box-shadow 0.2s;
+      color: #fff;
     }
 
-    .token[data-color="white"]  { box-shadow: 0 0 8px rgba(255,255,255,0.25); }
-    .token[data-color="blue"]   { box-shadow: 0 0 8px rgba(80,160,255,0.35); }
-    .token[data-color="black"]  { box-shadow: 0 0 8px rgba(0,0,0,0.7); }
-    .token[data-color="red"]    { box-shadow: 0 0 8px rgba(255,80,80,0.35); }
-    .token[data-color="green"]  { box-shadow: 0 0 8px rgba(80,200,120,0.35); }
-    .token[data-color="colorless"] { box-shadow: 0 0 8px rgba(200,200,200,0.25); }
+    /* Shake animation for Summoning Sick tokens */
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      50% { transform: translateX(4px); }
+      75% { transform: translateX(-4px); }
+      100% { transform: translateX(0); }
+    }
+    .token.shake { animation: shake 0.3s; }
 
-    .token-img {
-      width: 100%;
-      height: 70px;
-      object-fit: cover;
-      border-radius: 6px;
-      margin-bottom: 4px;
+    /* COLORS */
+    .token[data-color="white"] { background: #545450; border-color: #a8a8a0; box-shadow: 0 0 10px rgba(255,255,230,0.2); }
+    .token[data-color="blue"] { background: #1d3a5e; border-color: #4a86c0; box-shadow: 0 0 10px rgba(0,100,255,0.3); }
+    .token[data-color="black"] { background: #2e2e2e; border-color: #5e5e5e; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+    .token[data-color="red"] { background: #5e1d1d; border-color: #c04a4a; box-shadow: 0 0 10px rgba(255,50,50,0.3); }
+    .token[data-color="green"] { background: #1d4a1d; border-color: #4ac04a; box-shadow: 0 0 10px rgba(0,200,100,0.3); }
+    .token[data-color="colorless"] { background: #444444; border-color: #888888; box-shadow: 0 0 10px rgba(150,150,150,0.3); }
+
+    .token.tapped {
+      transform: rotate(10deg) translateY(10px);
+      opacity: 0.8;
+      filter: grayscale(0.3);
     }
 
-    .token-name {
+    .token-img-container {
+      flex: 1;
+      background: rgba(0,0,0,0.3);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      border: 1px solid rgba(0,0,0,0.2);
+    }
+    .token-img { width: 100%; height: 100%; object-fit: cover; }
+    .fallback-text { font-size: 40px; color: rgba(255,255,255,0.3); font-weight: 800; }
+
+    .token-details {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
+      height: 24px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }
 
     .token-qty {
       font-size: 12px;
-      color: #ccc;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.2);
     }
 
-    .token-pt {
+    .badge {
       position: absolute;
-      bottom: 4px;
-      right: 6px;
       padding: 2px 6px;
-      border-radius: 10px;
-      background: rgba(0,0,0,0.7);
-      border: 1px solid #666;
-      font-size: 11px;
-      font-weight: 600;
-    }
-
-	.haste-badge {
-	  position: absolute;
-	  bottom: 4px;
-	  left: 6px;
-	  padding: 2px 6px;
-	  border-radius: 10px;
-	  background: rgba(255,0,0,0.25);
-	  border: 1px solid rgba(255,0,0,0.4);
-	  font-size: 10px;
-	  text-transform: uppercase;
-}
-    .summoning {
-      position: absolute;
-      top: 4px;
-      right: 6px;
-      padding: 2px 6px;
-      border-radius: 10px;
-      background: rgba(255,255,0,0.15);
-      border: 1px solid rgba(255,255,0,0.4);
+      border-radius: 4px;
       font-size: 10px;
+      font-weight: bold;
       text-transform: uppercase;
-      letter-spacing: 0.03em;
+      z-index: 2;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
+    .pt-badge { bottom: 4px; right: 4px; background: rgba(0,0,0,0.85); border: 1px solid #999; font-size: 14px; color: #fff; }
+    .haste-badge { bottom: 4px; left: 4px; background: rgba(200,50,50,0.9); border: 1px solid red; color: #fff; }
+    .sick-badge { top: 4px; right: 4px; background: rgba(180,180,0,0.9); border: 1px solid yellow; color: #fff; }
 
-    .token.tapped {
-      transform: rotate(-12deg);
-      opacity: 0.85;
+    .token-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4px;
+      margin-top: 4px;
     }
+    .token-actions button {
+      padding: 4px;
+      font-size: 10px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #ddd;
+    }
+    .token-actions button:hover { background: rgba(0,0,0,0.6); }
+    .token-actions button.buff { color: #8f8; }
+    .token-actions button.nerf { color: #f88; }
 
-    /* -----------------------------------------
-	   iPHONE / SMALL-SCREEN OPTIMIZATION ONLY
-	   ----------------------------------------- */
-	@media (max-width: 600px) {
-
-	  html, body {
-	    height: 100vh;
-	    height: 100dvh; /* iPhone dynamic viewport */
-	    overflow: hidden; /* Prevent page scrolling */
-	    padding-bottom: env(safe-area-inset-bottom);
-	    padding-top: env(safe-area-inset-top);
-	  }
-
-	  #controls,
-	  #tokenForm {
-	    padding: 6px 10px;
-	    gap: 6px;
-	  }
-
-	  #controls button,
-	  #tokenForm button,
-	  #tokenForm input,
-	  #tokenForm select {
-	    padding: 6px;
-	    font-size: 14px;
-	  }
-
-	  #tokenList {
-	    flex: 1;
-	    overflow-y: auto;
-	    padding: 10px;
-	    display: grid;
-	    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
-	    gap: 10px;
-	    justify-items: center;
-	  }
-
-	  .token {
-	    width: 95px;
-	    height: calc(95px * 1.4); /* preserve 5×7 ratio */
-	  }
-}
+    @media (max-width: 768px) {
+      main { flex-direction: column; }
+      .sidebar {
+        width: 100%;
+        max-height: 250px;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      #tokenList { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+      .token { aspect-ratio: 4/6; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Commander Token Board</h1>
-    <div>
-      <button id="nextTurn">Next Turn</button>
-      <button id="clearTokens">Clear All</button>
+
+<header>
+  <h1>Commander Tokens</h1>
+  <div class="header-controls">
+    <button id="nextTurn">Untap / Next Turn</button>
+    <button id="clearTokens" style="color:#ff8888">Reset</button>
+  </div>
+</header>
+
+<main>
+  <div class="sidebar">
+    <div class="panel">
+      <h2>Quick Add</h2>
+      <input id="presetSearch" type="text" placeholder="Search (e.g. Goblin)..." />
+      <div id="presetPicker" class="preset-picker"></div>
     </div>
-  </header>
 
-  <main>
-    <div class="sidebar">
-      <!-- Presets -->
-      <div class="panel">
-        <h2>Presets</h2>
-        <input id="presetSearch" type="text" placeholder="Search tokens…" />
-        <div id="presetPicker" class="preset-picker"></div>
-        <!-- Hidden real select for logic -->
-        <select id="preset" style="display:none"></select>
-      </div>
-
-      <!-- Token form -->
-      <div class="panel">
-        <h2>Create Token</h2>
-        <form id="tokenForm">
-          <label for="name">Name</label>
-          <input type="text" id="name" placeholder="Custom name…" />
-
-          <label for="qty">Quantity</label>
-          <input type="number" id="qty" value="1" min="1" required />
-
-          <label for="color">Color</label>
-          <select id="color">
+    <div class="panel">
+      <h2>Custom Token</h2>
+      <form id="tokenForm">
+        <input type="text" id="name" placeholder="Name" required />
+        <div style="display:flex; gap:8px;">
+          <input type="number" id="qty" value="1" min="1" placeholder="Qty" style="flex:1" />
+          <select id="color" style="flex:1">
             <option value="white">White</option>
             <option value="blue">Blue</option>
             <option value="black">Black</option>
@@ -384,449 +301,423 @@
             <option value="green">Green</option>
             <option value="colorless">Colorless</option>
           </select>
-
-          <label for="power">Power</label>
-          <input type="number" id="power" value="1" />
-
-          <label for="toughness">Toughness</label>
-          <input type="number" id="toughness" value="1" />
-
-          <label for="image">Image (session only)</label>
-          <input type="file" id="image" accept="image/*" />
-		<label for="haste">
-		  <input type="checkbox" id="haste"> Haste
-</label>
-          <button type="submit">Add Token</button>
-        </form>
-      </div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <input type="number" id="power" value="1" placeholder="Pow" style="flex:1" />
+          <input type="number" id="toughness" value="1" placeholder="Tgh" style="flex:1" />
+        </div>
+        <input type="file" id="image" accept="image/*" />
+        <label style="font-size:12px; display:flex; align-items:center; gap:6px; margin-bottom:10px; cursor:pointer">
+          <input type="checkbox" id="haste"> Creature has Haste
+        </label>
+        <button type="submit" class="btn-green">Create Token</button>
+      </form>
     </div>
+  </div>
 
-    <!-- Battlefield -->
-    <div class="panel">
-      <h2>Battlefield</h2>
-      <div id="tokenList"></div>
-    </div>
-  </main>
+  <div class="battlefield">
+    <div id="tokenList"></div>
+  </div>
+</main>
 
-  <script>
-    // Session-only image storage
-    let sessionImages = {};
+<div id="context-menu"></div>
 
-    // Load saved tokens safely
-    let tokens = [];
-    try {
-      tokens = JSON.parse(localStorage.getItem("tokens")) || [];
-    } catch {
-      tokens = [];
+<script>
+  let tokens = [];
+  let sessionImages = {}; // Stores Base64 for uploads
+  let selectedPresetImage = null; // Temp storage for preset path logic
+
+  try {
+    tokens = JSON.parse(localStorage.getItem("mtg_tokens")) || [];
+  } catch { tokens = []; }
+
+  // --- LOGIC: SMART ADD & MERGE ---
+  function addTokenToBoard(newToken) {
+    const getImg = (t) => sessionImages[t.id] || t.imagePath || 'none';
+    const sig = (t) => `${t.name}|${t.color}|${t.power}|${t.toughness}|${t.counters}|${t.haste}|${t.summoning}|${t.tapped}|${getImg(t)}`;
+
+    const newSignature = sig(newToken);
+    const match = tokens.find(t => sig(t) === newSignature);
+
+    if (match) {
+      match.qty += newToken.qty;
+      if(sessionImages[newToken.id] && newToken.id !== match.id) {
+          delete sessionImages[newToken.id];
+      }
+    } else {
+      tokens.push(newToken);
     }
+    save();
+    render();
+  }
 
-    function save() {
-      localStorage.setItem("tokens", JSON.stringify(tokens));
-    }
+  function save() {
+    localStorage.setItem("mtg_tokens", JSON.stringify(tokens));
+  }
 
-    // Disable browser right-click menu
-    document.addEventListener("contextmenu", (e) => e.preventDefault());
+  function render() {
+    const list = document.getElementById("tokenList");
+    list.innerHTML = "";
 
-    // Commander token presets (alphabetized keys)
-    const PRESETS = {
-      angel:       { name: "Angel",       color: "white",    power: 4, toughness: 4 },
-      bat:         { name: "Bat",         color: "black",    power: 1, toughness: 1 },
-      beast:       { name: "Beast",       color: "green",    power: 3, toughness: 3 },
-      bird:        { name: "Bird",        color: "blue",     power: 1, toughness: 1 },
-      cat:         { name: "Cat",         color: "white",    power: 2, toughness: 2 },
-      clue:        { name: "Clue",        color: "colorless",power: 0, toughness: 0 },
-      construct:   { name: "Construct",   color: "colorless",power: 0, toughness: 0 },
-      devil:       { name: "Devil",       color: "red",      power: 1, toughness: 1 },
-      demon:       { name: "Demon",       color: "black",    power: 5, toughness: 5 },
-      drake:       { name: "Drake",       color: "blue",     power: 2, toughness: 2 },
-      dragon:      { name: "Dragon",      color: "red",      power: 4, toughness: 4 },
-      dwarf:       { name: "Dwarf",       color: "red",      power: 2, toughness: 1 },
-      eldrazi_scion:{name:"Eldrazi Scion",color:"colorless", power: 1, toughness: 1 },
-      eldrazi_spawn:{name:"Eldrazi Spawn",color:"colorless", power: 0, toughness: 1 },
-      elf_warrior: { name: "Elf Warrior", color: "green",    power: 1, toughness: 1 },
-      faerie:      { name: "Faerie",      color: "blue",     power: 1, toughness: 1 },
-      fish:        { name: "Fish",        color: "blue",     power: 1, toughness: 1 },
-      food:        { name: "Food",        color: "colorless",power: 0, toughness: 0 },
-      goblin:      { name: "Goblin",      color: "red",      power: 1, toughness: 1 },
-      golem:       { name: "Golem",       color: "colorless",power: 3, toughness: 3 },
-      horror:      { name: "Horror",      color: "black",    power: 3, toughness: 3 },
-      human:       { name: "Human",       color: "white",    power: 1, toughness: 1 },
-      illusion:    { name: "Illusion",    color: "blue",     power: 2, toughness: 2 },
-      insect:      { name: "Insect",      color: "green",    power: 1, toughness: 1 },
-      knight:      { name: "Knight",      color: "white",    power: 2, toughness: 2 },
-      kraken:      { name: "Kraken",      color: "blue",     power: 9, toughness: 9 },
-      myr:         { name: "Myr",         color: "colorless",power: 1, toughness: 1 },
-      pegasus:     { name: "Pegasus",     color: "white",    power: 1, toughness: 1 },
-      plant:       { name: "Plant",       color: "green",    power: 0, toughness: 1 },
-      rat:         { name: "Rat",         color: "black",    power: 1, toughness: 1 },
-      saproling:   { name: "Saproling",   color: "green",    power: 1, toughness: 1 },
-      servo:       { name: "Servo",       color: "colorless",power: 1, toughness: 1 },
-      skeleton:    { name: "Skeleton",    color: "black",    power: 1, toughness: 1 },
-      soldier:     { name: "Soldier",     color: "white",    power: 1, toughness: 1 },
-      spirit:      { name: "Spirit",      color: "white",    power: 1, toughness: 1 },
-      spirit_blue: { name: "Spirit",      color: "blue",     power: 1, toughness: 1 },
-      thopter:     { name: "Thopter",     color: "blue",     power: 1, toughness: 1 },
-      treasure:    { name: "Treasure",    color: "colorless",power: 0, toughness: 0 },
-      warrior:     { name: "Warrior",     color: "red",      power: 1, toughness: 1 },
-      wolf:        { name: "Wolf",        color: "green",    power: 2, toughness: 2 },
-      zombie:      { name: "Zombie",      color: "black",    power: 2, toughness: 2 },
-      zombie_army: { name: "Zombie Army", color: "black",    power: 0, toughness: 0 }
+    tokens.forEach((t, index) => {
+      const card = document.createElement("div");
+      card.className = `token ${t.tapped ? 'tapped' : ''}`;
+      card.dataset.color = t.color;
+
+      // --- 1. LEFT CLICK: TAP HANDLER ---
+      card.addEventListener("click", (e) => {
+        if(e.target.tagName === "BUTTON") return;
+
+        // CHECK: Is it summoning sick?
+        // Note: We allow UNTAPPING even if sick (in case of error), but prevent TAPPING.
+        if (t.summoning && !t.tapped) {
+            // Shake visual feedback
+            card.classList.add("shake");
+            setTimeout(() => card.classList.remove("shake"), 300);
+            return;
+        }
+
+        if (t.qty === 1) {
+            t.tapped = !t.tapped;
+        } else {
+            // Decrement current stack
+            t.qty--;
+
+            // Create a single token with opposite state
+            const singleToken = JSON.parse(JSON.stringify(t));
+            singleToken.qty = 1;
+            singleToken.tapped = !t.tapped;
+            singleToken.id = crypto.randomUUID();
+
+            // Copy session image if needed
+            if(sessionImages[t.id]) sessionImages[singleToken.id] = sessionImages[t.id];
+
+            // Use smart add to merge it if a matching stack exists
+            addTokenToBoard(singleToken);
+            return;
+        }
+        save();
+        render();
+      });
+
+      // --- 2. RIGHT CLICK: CONTEXT MENU ---
+      card.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        showContextMenu(e, t, index);
+      });
+
+      // Image & Badges
+      const imgContainer = document.createElement("div");
+      imgContainer.className = "token-img-container";
+
+      let imgSrc = null;
+      if (sessionImages[t.id]) {
+        imgSrc = sessionImages[t.id];
+      } else if (t.imagePath) {
+        imgSrc = t.imagePath;
+      }
+
+      if (imgSrc) {
+        const img = document.createElement("img");
+        img.src = imgSrc;
+        img.className = "token-img";
+        img.onerror = function() {
+            this.style.display = 'none';
+            const fb = document.createElement("div");
+            fb.className = "fallback-text";
+            fb.innerText = t.name[0];
+            imgContainer.appendChild(fb);
+        };
+        imgContainer.appendChild(img);
+      } else {
+        const fallback = document.createElement("div");
+        fallback.className = "fallback-text";
+        fallback.innerText = t.name[0];
+        imgContainer.appendChild(fallback);
+      }
+
+      const effectivePower = t.power + t.counters;
+      const effectiveToughness = t.toughness + t.counters;
+
+      const ptBadge = document.createElement("div");
+      ptBadge.className = "badge pt-badge";
+      ptBadge.innerText = `${effectivePower}/${effectiveToughness}`;
+      imgContainer.appendChild(ptBadge);
+
+      if (t.summoning) {
+        const sick = document.createElement("div");
+        sick.className = "badge sick-badge";
+        sick.innerText = "ZZZ";
+        imgContainer.appendChild(sick);
+      }
+      if (t.haste) {
+        const haste = document.createElement("div");
+        haste.className = "badge haste-badge";
+        haste.innerText = "HASTE";
+        imgContainer.appendChild(haste);
+      }
+      card.appendChild(imgContainer);
+
+      const details = document.createElement("div");
+      details.className = "token-details";
+      details.innerHTML = `<span>${t.name}</span> <span class="token-qty">x${t.qty}</span>`;
+      card.appendChild(details);
+
+      const actions = document.createElement("div");
+      actions.className = "token-actions";
+
+      const btnBuff = document.createElement("button");
+      btnBuff.className = "buff";
+      btnBuff.innerText = "+1/+1";
+      btnBuff.onclick = () => { t.counters++; save(); render(); };
+
+      const btnNerf = document.createElement("button");
+      btnNerf.className = "nerf";
+      btnNerf.innerText = "-1/-1";
+      btnNerf.onclick = () => { t.counters--; save(); render(); };
+
+      const btnClone = document.createElement("button");
+      btnClone.innerText = "Clone";
+      btnClone.onclick = () => {
+         const clone = JSON.parse(JSON.stringify(t));
+         clone.id = crypto.randomUUID();
+         clone.qty = 1;
+         clone.summoning = true;
+         if(clone.haste) clone.summoning = false;
+         clone.tapped = false;
+         clone.counters = 0;
+         if(sessionImages[t.id]) sessionImages[clone.id] = sessionImages[t.id];
+         addTokenToBoard(clone);
+      };
+
+      actions.appendChild(btnBuff);
+      actions.appendChild(btnNerf);
+      actions.appendChild(btnClone);
+      card.appendChild(actions);
+
+      list.appendChild(card);
+    });
+  }
+
+  // --- CONTEXT MENU LOGIC ---
+  const ctxMenu = document.getElementById("context-menu");
+
+  function showContextMenu(e, token, index) {
+    const action = token.tapped ? "Untap" : "Tap";
+
+    ctxMenu.innerHTML = `
+      <div class="ctx-item" id="ctx-tap-x">${action} Specific Amount...</div>
+      <div class="ctx-item ctx-danger" id="ctx-kill-1">Destroy 1 (Decrease Qty)</div>
+      <div class="ctx-item ctx-danger" id="ctx-kill-all">Delete Entire Stack</div>
+    `;
+
+    ctxMenu.style.display = "block";
+
+    const x = Math.min(e.clientX, window.innerWidth - 170);
+    const y = Math.min(e.clientY, window.innerHeight - 120);
+    ctxMenu.style.left = `${x}px`;
+    ctxMenu.style.top = `${y}px`;
+
+    document.getElementById("ctx-tap-x").onclick = () => {
+       const input = prompt(`How many to ${action}?`, token.qty);
+       if(input) {
+         const count = parseInt(input);
+         if(count > 0 && count < token.qty) {
+            token.qty -= count;
+            const newStack = JSON.parse(JSON.stringify(token));
+            newStack.qty = count;
+            newStack.tapped = !token.tapped;
+            newStack.id = crypto.randomUUID();
+            if(sessionImages[token.id]) sessionImages[newStack.id] = sessionImages[token.id];
+            addTokenToBoard(newStack);
+         } else if (count >= token.qty) {
+            token.tapped = !token.tapped;
+            save(); render();
+         }
+       }
+       ctxMenu.style.display = "none";
     };
 
-    const presetPicker = document.getElementById("presetPicker");
-    const presetSearch = document.getElementById("presetSearch");
-    const presetSelect = document.getElementById("preset");
-    const nameInput = document.getElementById("name");
-    const colorInput = document.getElementById("color");
-    const powerInput = document.getElementById("power");
-    const toughnessInput = document.getElementById("toughness");
-    const hasteInput = document.getElementById("haste");
-
-    // Populate hidden select + preset grid
-    function initPresets() {
-      const customOpt = document.createElement("option");
-      customOpt.value = "";
-      customOpt.textContent = "Custom Token";
-      presetSelect.appendChild(customOpt);
-
-      Object.keys(PRESETS).sort().forEach(key => {
-        const p = PRESETS[key];
-        const opt = document.createElement("option");
-        opt.value = key;
-        opt.textContent = p.name;
-        presetSelect.appendChild(opt);
-      });
-
-      renderPresetPicker();
-    }
-
-    function renderPresetPicker() {
-      presetPicker.innerHTML = "";
-
-      Object.keys(PRESETS).sort().forEach(key => {
-        const p = PRESETS[key];
-
-        const item = document.createElement("div");
-        item.className = "preset-item";
-        item.dataset.key = key;
-
-        const icon = document.createElement("div");
-        icon.className = "preset-icon fallback-icon";
-        icon.textContent = p.name[0];
-
-        const label = document.createElement("div");
-        label.className = "preset-label";
-
-        const line1 = document.createElement("span");
-        line1.textContent = p.name;
-
-        const line2 = document.createElement("span");
-        line2.textContent = `${p.power}/${p.toughness} • ${p.color}`;
-
-        label.appendChild(line1);
-        label.appendChild(line2);
-
-        item.appendChild(icon);
-        item.appendChild(label);
-
-        item.addEventListener("click", () => {
-          presetSelect.value = key;
-          presetSelect.dispatchEvent(new Event("change"));
-        });
-
-        presetPicker.appendChild(item);
-      });
-    }
-
-    // Search filter
-    presetSearch.addEventListener("input", () => {
-      const query = presetSearch.value.toLowerCase();
-      document.querySelectorAll(".preset-item").forEach(item => {
-        const text = item.textContent.toLowerCase();
-        item.style.display = text.includes(query) ? "flex" : "none";
-      });
-    });
-
-    // Auto-fill fields when preset changes
-    presetSelect.addEventListener("change", () => {
-      const key = presetSelect.value;
-
-      if (!key || !PRESETS[key]) {
-        nameInput.value = "";
-        colorInput.value = "white";
-        powerInput.value = 1;
-        toughnessInput.value = 1;
-
-        nameInput.readOnly = false;
-        colorInput.disabled = false;
-        powerInput.readOnly = false;
-        toughnessInput.readOnly = false;
-        return;
-      }
-
-      const p = PRESETS[key];
-      nameInput.value = p.name;
-      colorInput.value = p.color;
-      powerInput.value = p.power;
-      toughnessInput.value = p.toughness;
-
-      nameInput.readOnly = true;
-      colorInput.disabled = true;
-      powerInput.readOnly = true;
-      toughnessInput.readOnly = true;
-    });
-
-    // Render tokens
-    function render() {
-      const list = document.getElementById("tokenList");
-      list.innerHTML = "";
-
-      tokens.forEach((t, i) => {
-        // Backward compatibility for old saves
-        t.plusCounters = t.plusCounters || 0;
-        t.minusCounters = t.minusCounters || 0;
-
-        const card = document.createElement("div");
-        card.className = "token";
-        card.dataset.color = t.color;
-        if (t.tapped) card.classList.add("tapped");
-
-        if (sessionImages[t.id]) {
-          const img = document.createElement("img");
-          img.src = sessionImages[t.id];
-          img.className = "token-img";
-          card.appendChild(img);
-        }
-
-        const name = document.createElement("div");
-        name.className = "token-name";
-        name.textContent = t.name;
-        card.appendChild(name);
-
-        const qty = document.createElement("div");
-        qty.className = "token-qty";
-        qty.textContent = "x" + t.qty;
-        card.appendChild(qty);
-
-        const pt = document.createElement("div");
-        pt.className = "token-pt";
-        const effP = t.power + t.plusCounters - t.minusCounters;
-        const effT = t.toughness + t.plusCounters - t.minusCounters;
-        pt.textContent = `${effP}/${effT}`;
-        card.appendChild(pt);
-
-        if (t.summoning) {
-          const s = document.createElement("div");
-          s.className = "summoning";
-          s.textContent = "Summoning Sick";
-          card.appendChild(s);
-        }
-
-        if (t.haste) {
-          const h = document.createElement("div");
-          h.className = "haste-badge";
-          h.textContent = "Haste";
-          card.appendChild(h);
-        }
-
-        // Counter controls
-        const ctrls = document.createElement("div");
-        ctrls.className = "counter-controls";
-
-        const plusBtn = document.createElement("button");
-        plusBtn.textContent = "+1/+1";
-        plusBtn.className = "counter-btn plus";
-        plusBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          t.plusCounters++;
-          save();
-          render();
-        });
-
-        const minusBtn = document.createElement("button");
-        minusBtn.textContent = "-1/-1";
-        minusBtn.className = "counter-btn minus";
-        minusBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          t.minusCounters++;
-          save();
-          render();
-        });
-
-        const removePlus = document.createElement("button");
-        removePlus.textContent = "– +1/+1";
-        removePlus.className = "counter-btn remove";
-        removePlus.addEventListener("click", (e) => {
-          e.stopPropagation();
-          if (t.plusCounters > 0) t.plusCounters--;
-          save();
-          render();
-        });
-
-        const removeMinus = document.createElement("button");
-        removeMinus.textContent = "– -1/-1";
-        removeMinus.className = "counter-btn remove";
-        removeMinus.addEventListener("click", (e) => {
-          e.stopPropagation();
-          if (t.minusCounters > 0) t.minusCounters--;
-          save();
-          render();
-        });
-
-        ctrls.appendChild(plusBtn);
-        ctrls.appendChild(minusBtn);
-        ctrls.appendChild(removePlus);
-        ctrls.appendChild(removeMinus);
-        card.appendChild(ctrls);
-
-        // Tap/untap
-        card.addEventListener("click", () => {
-          if (t.summoning) return;
-          t.tapped = !t.tapped;
-          save();
-          render();
-        });
-
-        // Right-click remove
-        card.addEventListener("contextmenu", (e) => {
-          e.preventDefault();
-          if (t.qty > 1) {
-            t.qty -= 1;
-          } else {
-            tokens.splice(i, 1);
-            delete sessionImages[t.id];
-          }
-          save();
-          render();
-        });
-
-        // Long-press remove
-        let pressTimer;
-        card.addEventListener("touchstart", () => {
-          pressTimer = setTimeout(() => {
-            if (t.qty > 1) {
-              t.qty -= 1;
-            } else {
-              tokens.splice(i, 1);
-              delete sessionImages[t.id];
-            }
-            save();
-            render();
-          }, 500);
-        });
-        card.addEventListener("touchend", () => clearTimeout(pressTimer));
-        card.addEventListener("touchmove", () => clearTimeout(pressTimer));
-
-        list.appendChild(card);
-      });
-    }
-
-    // Add token
-    document.getElementById("tokenForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-
-      const presetKey = presetSelect.value;
-      const file = document.getElementById("image").files[0];
-      const qty = parseInt(document.getElementById("qty").value);
-      const haste = hasteInput.checked;
-
-      let name, color, power, toughness;
-
-      if (presetKey && PRESETS[presetKey]) {
-        const p = PRESETS[presetKey];
-        name = p.name;
-        color = p.color;
-        power = p.power;
-        toughness = p.toughness;
+    document.getElementById("ctx-kill-1").onclick = () => {
+      if (token.qty > 1) {
+        token.qty--;
       } else {
-        name = nameInput.value.trim();
-        color = colorInput.value;
-        power = parseInt(powerInput.value);
-        toughness = parseInt(toughnessInput.value);
+        delete sessionImages[token.id];
+        tokens.splice(index, 1);
+      }
+      save(); render();
+      ctxMenu.style.display = "none";
+    };
 
-        if (!name) {
-          alert("Please enter a name or choose a preset.");
-          return;
+    document.getElementById("ctx-kill-all").onclick = () => {
+      if(confirm(`Remove all ${token.name} tokens?`)) {
+        delete sessionImages[token.id];
+        tokens.splice(index, 1);
+        save(); render();
+      }
+      ctxMenu.style.display = "none";
+    };
+  }
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("#context-menu")) {
+      ctxMenu.style.display = "none";
+    }
+  });
+
+  // --- FORM HANDLER ---
+  document.getElementById("tokenForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = document.getElementById("name").value;
+    const qty = parseInt(document.getElementById("qty").value);
+    const color = document.getElementById("color").value;
+    const power = parseInt(document.getElementById("power").value) || 0;
+    const toughness = parseInt(document.getElementById("toughness").value) || 1;
+    const haste = document.getElementById("haste").checked;
+    const file = document.getElementById("image").files[0];
+
+    const id = crypto.randomUUID();
+    const newToken = {
+      id, name, qty, color, power, toughness, haste,
+      summoning: !haste,
+      tapped: false,
+      counters: 0,
+      imagePath: null
+    };
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        sessionImages[id] = reader.result;
+        addTokenToBoard(newToken);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      if (selectedPresetImage) {
+        newToken.imagePath = selectedPresetImage;
+        selectedPresetImage = null;
+      }
+      addTokenToBoard(newToken);
+    }
+
+    document.getElementById("name").value = "";
+    document.getElementById("image").value = "";
+    document.getElementById("name").focus();
+  });
+
+  // Next Turn with Auto-Merge
+  document.getElementById("nextTurn").addEventListener("click", () => {
+    tokens.forEach(t => { t.summoning = false; t.tapped = false; });
+
+    const consolidated = [];
+    const getImg = (t) => sessionImages[t.id] || t.imagePath || 'none';
+
+    tokens.forEach(t => {
+        const key = `${t.name}|${t.color}|${t.power}|${t.toughness}|${t.counters}|${t.haste}|${t.summoning}|${t.tapped}|${getImg(t)}`;
+        const existing = consolidated.find(c => c.key === key);
+        if (existing) {
+            existing.token.qty += t.qty;
+            if(sessionImages[t.id] && existing.token.id !== t.id) {
+               delete sessionImages[t.id];
+            }
+        } else {
+            consolidated.push({ key, token: t });
         }
-      }
-
-      const summoning = !haste;
-
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const id = crypto.randomUUID();
-          sessionImages[id] = reader.result;
-
-          tokens.push({
-            id,
-            name,
-            qty,
-            color,
-            power,
-            toughness,
-            haste,
-            summoning,
-            tapped: false,
-            imageUrl: null,
-            plusCounters: 0,
-            minusCounters: 0
-          });
-
-          save();
-          render();
-          e.target.reset();
-          presetSelect.value = "";
-          presetSelect.dispatchEvent(new Event("change"));
-        };
-        reader.readAsDataURL(file);
-        return;
-      }
-
-      tokens.push({
-        id: crypto.randomUUID(),
-        name,
-        qty,
-        color,
-        power,
-        toughness,
-        haste,
-        summoning,
-        tapped: false,
-        imageUrl: null,
-        plusCounters: 0,
-        minusCounters: 0
-      });
-
-      save();
-      render();
-      e.target.reset();
-      presetSelect.value = "";
-      presetSelect.dispatchEvent(new Event("change"));
     });
 
-    document.getElementById("nextTurn").addEventListener("click", () => {
-      tokens.forEach(t => t.summoning = false);
-      save();
-      render();
-    });
+    tokens = consolidated.map(c => c.token);
+    save();
+    render();
+  });
 
-    document.getElementById("clearTokens").addEventListener("click", () => {
+  document.getElementById("clearTokens").addEventListener("click", () => {
+    if(confirm("Clear board?")) {
       tokens = [];
       sessionImages = {};
       save();
       render();
-    });
-
-    // Init
-    initPresets();
-    presetSelect.dispatchEvent(new Event("change"));
-    render();
-
-    // Service worker registration (for PWA)
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./service-worker.js");
     }
+  });
+
+  document.getElementById("presetSearch").addEventListener("input", (e) => {
+    const term = e.target.value.toLowerCase();
+    Array.from(document.getElementById("presetPicker").children).forEach(child => {
+      child.style.display = child.innerText.toLowerCase().includes(term) ? "flex" : "none";
+    });
+  });
+
+  // --- PRESETS ---
+  const PRESETS = {
+    angel:        { name: "Angel",        color: "white",     power: 4, toughness: 4 },
+    bat:          { name: "Bat",          color: "black",     power: 1, toughness: 1 },
+    beast:        { name: "Beast",        color: "green",     power: 3, toughness: 3 },
+    bird:         { name: "Bird",         color: "blue",      power: 1, toughness: 1 },
+    cat:          { name: "Cat",          color: "white",     power: 2, toughness: 2 },
+    clue:         { name: "Clue",         color: "colorless", power: 0, toughness: 0 },
+    construct:    { name: "Construct",    color: "colorless", power: 0, toughness: 0 },
+    devil:        { name: "Devil",        color: "red",       power: 1, toughness: 1 },
+    demon:        { name: "Demon",        color: "black",     power: 5, toughness: 5 },
+    drake:        { name: "Drake",        color: "blue",      power: 2, toughness: 2 },
+    dragon:       { name: "Dragon",       color: "red",       power: 4, toughness: 4 },
+    dwarf:        { name: "Dwarf",        color: "red",       power: 2, toughness: 1 },
+    eldrazi_scion:{ name: "Eldrazi Scion",color: "colorless", power: 1, toughness: 1 },
+    eldrazi_spawn:{ name: "Eldrazi Spawn",color: "colorless", power: 0, toughness: 1 },
+    elf_warrior:  { name: "Elf Warrior",  color: "green",     power: 1, toughness: 1 },
+    faerie:       { name: "Faerie",       color: "blue",      power: 1, toughness: 1 },
+    fish:         { name: "Fish",         color: "blue",      power: 1, toughness: 1 },
+    food:         { name: "Food",         color: "colorless", power: 0, toughness: 0 },
+    goblin:       { name: "Goblin",       color: "red",       power: 1, toughness: 1 },
+    golem:        { name: "Golem",        color: "colorless", power: 3, toughness: 3 },
+    horror:       { name: "Horror",       color: "black",     power: 3, toughness: 3 },
+    human:        { name: "Human",        color: "white",     power: 1, toughness: 1 },
+    illusion:     { name: "Illusion",     color: "blue",      power: 2, toughness: 2 },
+    insect:       { name: "Insect",       color: "green",     power: 1, toughness: 1 },
+    knight:       { name: "Knight",       color: "white",     power: 2, toughness: 2 },
+    kraken:       { name: "Kraken",       color: "blue",      power: 9, toughness: 9 },
+    myr:          { name: "Myr",          color: "colorless", power: 1, toughness: 1 },
+    pegasus:      { name: "Pegasus",      color: "white",     power: 1, toughness: 1 },
+    plant:        { name: "Plant",        color: "green",     power: 0, toughness: 1 },
+    rat:          { name: "Rat",          color: "black",     power: 1, toughness: 1 },
+    saproling:    { name: "Saproling",    color: "green",     power: 1, toughness: 1 },
+    servo:        { name: "Servo",        color: "colorless", power: 1, toughness: 1 },
+    skeleton:     { name: "Skeleton",     color: "black",     power: 1, toughness: 1 },
+    soldier:      { name: "Soldier",      color: "white",     power: 1, toughness: 1 },
+    spirit:       { name: "Spirit",       color: "white",     power: 1, toughness: 1 },
+    spirit_blue:  { name: "Spirit (U)",   color: "blue",      power: 1, toughness: 1 },
+    thopter:      { name: "Thopter",      color: "blue",      power: 1, toughness: 1 },
+    treasure:     { name: "Treasure",     color: "colorless", power: 0, toughness: 0 },
+    warrior:      { name: "Warrior",      color: "red",       power: 1, toughness: 1 },
+    wolf:         { name: "Wolf",         color: "green",     power: 2, toughness: 2 },
+    zombie:       { name: "Zombie",       color: "black",     power: 2, toughness: 2 },
+    zombie_army:  { name: "Zombie Army",  color: "black",     power: 0, toughness: 0 }
+  };
+
+  const presetPicker = document.getElementById("presetPicker");
+  function getColorCode(c) {
+    const map = { white: '#fffacd', blue: '#69c5ff', black: '#a9a9a9', red: '#ff6b6b', green: '#90ee90', colorless: '#d3d3d3' };
+    return map[c] || '#fff';
+  }
+
+  Object.keys(PRESETS).sort().forEach(key => {
+    const p = PRESETS[key];
+    const item = document.createElement("div");
+    item.className = "preset-item";
+    item.innerHTML = `<div style="width:10px; height:10px; border-radius:50%; background:${getColorCode(p.color)}; border:1px solid #555;"></div> <b>${p.name}</b> <span style="color:#888; margin-left:auto; font-size:10px;">${p.power}/${p.toughness}</span>`;
+
+    item.onclick = () => {
+      document.getElementById("name").value = p.name;
+      document.getElementById("color").value = p.color;
+      document.getElementById("power").value = p.power;
+      document.getElementById("toughness").value = p.toughness;
+      selectedPresetImage = `${p.name}.png`;
+      const qtyBox = document.getElementById("qty");
+      qtyBox.focus();
+      qtyBox.select();
+    };
+    presetPicker.appendChild(item);
+  });
+
+  render();
 </script>
 </body>
 </html>
