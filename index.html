@@ -204,6 +204,7 @@
       user-select: none;
       transition: transform 0.2s ease, box-shadow 0.2s;
       color: #fff;
+      touch-action: manipulation; /* Improves touch response */
     }
 
     @keyframes shake {
@@ -377,7 +378,7 @@
   </div>
 </main>
 
-<div class="version-tag">v1.5 (Inst. Link)</div>
+<div class="version-tag">v1.6 (Touch Support)</div>
 <div id="context-menu"></div>
 
 <script>
@@ -460,8 +461,39 @@
       card.className = `token ${t.tapped ? 'tapped' : ''}`;
       card.dataset.color = t.color;
 
+      // --- LONG PRESS LOGIC (NEW) ---
+      let tokenTimer = null;
+      let tokenIsLongPress = false;
+
+      // 1. Touch Start
+      card.addEventListener("touchstart", (e) => {
+        tokenIsLongPress = false;
+        tokenTimer = setTimeout(() => {
+            tokenIsLongPress = true;
+            // Get touch coordinates
+            const touch = e.touches[0];
+            // Mock an event object with clientX/Y
+            showTokenContextMenu({ clientX: touch.clientX, clientY: touch.clientY }, t, index);
+        }, 500);
+      }, {passive: true});
+
+      // 2. Touch End
+      card.addEventListener("touchend", (e) => {
+        clearTimeout(tokenTimer);
+        if (tokenIsLongPress) {
+            e.preventDefault(); // Prevent the standard click from firing
+        }
+      });
+
+      // 3. Touch Move (Cancel if scrolling)
+      card.addEventListener("touchmove", () => {
+        clearTimeout(tokenTimer);
+      });
+
+      // --- CLICK: TAP HANDLER ---
       card.addEventListener("click", (e) => {
         if(e.target.tagName === "BUTTON") return;
+        if(tokenIsLongPress) return; // Don't tap if it was a long press
 
         if (t.summoning && !t.tapped) {
             card.classList.add("shake");
@@ -485,6 +517,7 @@
         render();
       });
 
+      // --- RIGHT CLICK (DESKTOP) ---
       card.addEventListener("contextmenu", (e) => {
         e.preventDefault();
         showTokenContextMenu(e, t, index);
