@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <title>Commander Token Board</title>
+
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <meta name="theme-color" content="#111111">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
@@ -22,6 +27,8 @@
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
+      -webkit-user-select: none; /* Helps prevent text selection on long press */
+      user-select: none;
     }
 
     /* --- HEADER --- */
@@ -116,7 +123,7 @@
       overflow: hidden;
     }
     .ctx-item {
-      padding: 10px 14px;
+      padding: 12px 14px; /* Larger tap target for mobile */
       font-size: 14px;
       cursor: pointer;
       border-bottom: 1px solid #333;
@@ -143,6 +150,7 @@
       cursor: pointer;
       font-size: 12px;
       border: 1px solid transparent;
+      touch-action: none; /* Prevents browser zoom/pan on double tap */
     }
     .preset-item:hover { border-color: #666; background: #2a2a2a; }
 
@@ -167,7 +175,7 @@
       color: #fff;
     }
 
-    /* Shake animation for Summoning Sick tokens */
+    /* Shake animation */
     @keyframes shake {
       0% { transform: translateX(0); }
       25% { transform: translateX(-4px); }
@@ -256,6 +264,17 @@
     .token-actions button.buff { color: #8f8; }
     .token-actions button.nerf { color: #f88; }
 
+    /* Version Footer */
+    .version-tag {
+        position: fixed;
+        bottom: 5px;
+        right: 10px;
+        color: #444;
+        font-size: 10px;
+        pointer-events: none;
+        z-index: 100;
+    }
+
     @media (max-width: 768px) {
       main { flex-direction: column; }
       .sidebar {
@@ -320,12 +339,14 @@
   </div>
 </main>
 
+<div class="version-tag">v1.1 (Long Press Support)</div>
+
 <div id="context-menu"></div>
 
 <script>
   let tokens = [];
-  let sessionImages = {}; // Stores Base64 for uploads
-  let selectedPresetImage = null; // Temp storage for preset path logic
+  let sessionImages = {};
+  let selectedPresetImage = null;
 
   try {
     tokens = JSON.parse(localStorage.getItem("mtg_tokens")) || [];
@@ -364,13 +385,11 @@
       card.className = `token ${t.tapped ? 'tapped' : ''}`;
       card.dataset.color = t.color;
 
-      // --- 1. LEFT CLICK: TAP HANDLER ---
+      // --- 1. CLICK: TAP HANDLER ---
       card.addEventListener("click", (e) => {
         if(e.target.tagName === "BUTTON") return;
 
-        // CHECK: Is it summoning sick?
         if (t.summoning && !t.tapped) {
-            // Shake visual feedback
             card.classList.add("shake");
             setTimeout(() => card.classList.remove("shake"), 300);
             return;
@@ -379,19 +398,12 @@
         if (t.qty === 1) {
             t.tapped = !t.tapped;
         } else {
-            // Decrement current stack
             t.qty--;
-
-            // Create a single token with opposite state
             const singleToken = JSON.parse(JSON.stringify(t));
             singleToken.qty = 1;
             singleToken.tapped = !t.tapped;
             singleToken.id = crypto.randomUUID();
-
-            // Copy session image if needed
             if(sessionImages[t.id]) sessionImages[singleToken.id] = sessionImages[t.id];
-
-            // Use smart add to merge it if a matching stack exists
             addTokenToBoard(singleToken);
             return;
         }
@@ -410,11 +422,8 @@
       imgContainer.className = "token-img-container";
 
       let imgSrc = null;
-      if (sessionImages[t.id]) {
-        imgSrc = sessionImages[t.id];
-      } else if (t.imagePath) {
-        imgSrc = t.imagePath;
-      }
+      if (sessionImages[t.id]) imgSrc = sessionImages[t.id];
+      else if (t.imagePath) imgSrc = t.imagePath;
 
       if (imgSrc) {
         const img = document.createElement("img");
@@ -498,24 +507,17 @@
     });
   }
 
-  // --- CONTEXT MENUS ---
+  // --- MENU DISPLAY LOGIC ---
   const ctxMenu = document.getElementById("context-menu");
 
   function showTokenContextMenu(e, token, index) {
     const action = token.tapped ? "Untap" : "Tap";
-
     ctxMenu.innerHTML = `
       <div class="ctx-item" id="ctx-tap-x">${action} Specific Amount...</div>
       <div class="ctx-item ctx-danger" id="ctx-kill-1">Destroy 1 (Decrease Qty)</div>
       <div class="ctx-item ctx-danger" id="ctx-kill-all">Delete Entire Stack</div>
     `;
-
-    ctxMenu.style.display = "block";
-
-    const x = Math.min(e.clientX, window.innerWidth - 170);
-    const y = Math.min(e.clientY, window.innerHeight - 120);
-    ctxMenu.style.left = `${x}px`;
-    ctxMenu.style.top = `${y}px`;
+    positionMenu(e.clientX, e.clientY);
 
     document.getElementById("ctx-tap-x").onclick = () => {
        const input = prompt(`How many to ${action}?`, token.qty);
@@ -555,6 +557,39 @@
         save(); render();
       }
       ctxMenu.style.display = "none";
+    };
+  }
+
+  // --- SHARED MENU HELPER ---
+  function positionMenu(x, y) {
+    ctxMenu.style.display = "block";
+    const adjustedX = Math.min(x, window.innerWidth - 170);
+    const adjustedY = Math.min(y, window.innerHeight - 100);
+    ctxMenu.style.left = `${adjustedX}px`;
+    ctxMenu.style.top = `${adjustedY}px`;
+  }
+
+  function showPresetContextMenu(x, y, p) {
+    ctxMenu.innerHTML = `<div class="ctx-item" id="ctx-quick-create">Quick Create ${p.name}</div>`;
+    positionMenu(x, y);
+
+    document.getElementById("ctx-quick-create").onclick = () => {
+        const id = crypto.randomUUID();
+        const token = {
+            id,
+            name: p.name,
+            qty: 1,
+            color: p.color,
+            power: p.power,
+            toughness: p.toughness,
+            haste: false,
+            summoning: true,
+            tapped: false,
+            counters: 0,
+            imagePath: `${p.name}.png`
+        };
+        addTokenToBoard(token);
+        ctxMenu.style.display = "none";
     };
   }
 
@@ -604,10 +639,9 @@
     document.getElementById("name").focus();
   });
 
-  // Next Turn with Auto-Merge
+  // Next Turn
   document.getElementById("nextTurn").addEventListener("click", () => {
     tokens.forEach(t => { t.summoning = false; t.tapped = false; });
-
     const consolidated = [];
     const getImg = (t) => sessionImages[t.id] || t.imagePath || 'none';
 
@@ -616,14 +650,11 @@
         const existing = consolidated.find(c => c.key === key);
         if (existing) {
             existing.token.qty += t.qty;
-            if(sessionImages[t.id] && existing.token.id !== t.id) {
-               delete sessionImages[t.id];
-            }
+            if(sessionImages[t.id] && existing.token.id !== t.id) delete sessionImages[t.id];
         } else {
             consolidated.push({ key, token: t });
         }
     });
-
     tokens = consolidated.map(c => c.token);
     save();
     render();
@@ -703,8 +734,44 @@
     item.className = "preset-item";
     item.innerHTML = `<div style="width:10px; height:10px; border-radius:50%; background:${getColorCode(p.color)}; border:1px solid #555;"></div> <b>${p.name}</b> <span style="color:#888; margin-left:auto; font-size:10px;">${p.power}/${p.toughness}</span>`;
 
-    // Left Click: Fill Form
-    item.onclick = () => {
+    // --- RIGHT CLICK (DESKTOP) ---
+    item.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        showPresetContextMenu(e.clientX, e.clientY, p);
+    });
+
+    // --- LONG PRESS (MOBILE) ---
+    let timer = null;
+    let isLongPress = false;
+
+    item.addEventListener("touchstart", (e) => {
+        isLongPress = false;
+        // Start 500ms timer
+        timer = setTimeout(() => {
+            isLongPress = true;
+            // Get touch coordinates (using first finger)
+            const touch = e.touches[0];
+            showPresetContextMenu(touch.clientX, touch.clientY, p);
+        }, 500);
+    }, {passive: true});
+
+    item.addEventListener("touchend", (e) => {
+        clearTimeout(timer);
+        if (isLongPress) {
+            e.preventDefault(); // Prevent click from firing if we just did a long press
+        }
+    });
+
+    item.addEventListener("touchmove", () => {
+        // If scrolling, cancel the long press
+        clearTimeout(timer);
+    });
+
+    // --- LEFT CLICK (FILL FORM) ---
+    item.onclick = (e) => {
+      // If we just triggered a long press menu, don't fill the form
+      if (isLongPress) return;
+
       document.getElementById("name").value = p.name;
       document.getElementById("color").value = p.color;
       document.getElementById("power").value = p.power;
@@ -714,38 +781,6 @@
       qtyBox.focus();
       qtyBox.select();
     };
-
-    // Right Click: Quick Create Menu
-    item.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-
-        ctxMenu.innerHTML = `<div class="ctx-item" id="ctx-quick-create">Quick Create ${p.name}</div>`;
-        ctxMenu.style.display = "block";
-
-        const x = Math.min(e.clientX, window.innerWidth - 170);
-        const y = Math.min(e.clientY, window.innerHeight - 50);
-        ctxMenu.style.left = `${x}px`;
-        ctxMenu.style.top = `${y}px`;
-
-        document.getElementById("ctx-quick-create").onclick = () => {
-            const id = crypto.randomUUID();
-            const token = {
-                id,
-                name: p.name,
-                qty: 1,
-                color: p.color,
-                power: p.power,
-                toughness: p.toughness,
-                haste: false,
-                summoning: true,
-                tapped: false,
-                counters: 0,
-                imagePath: `${p.name}.png`
-            };
-            addTokenToBoard(token);
-            ctxMenu.style.display = "none";
-        };
-    });
 
     presetPicker.appendChild(item);
   });
