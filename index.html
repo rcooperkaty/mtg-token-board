@@ -40,30 +40,51 @@
       justify-content: space-between;
       align-items: center;
       flex-shrink: 0;
-      z-index: 10;
+      z-index: 2000; /* Higher than menu */
+      position: relative;
     }
 
     header h1 { font-size: 18px; margin: 0; }
-    .header-controls { display: flex; gap: 8px; align-items: center; }
 
-    /* Shared style for Buttons and Link */
-    button, .header-link {
-      background: #444;
+    /* Hamburger Button */
+    #menuBtn {
+      background: transparent;
+      border: 1px solid #444;
       color: #eee;
-      border: none;
-      padding: 8px 12px;
+      font-size: 20px;
+      padding: 4px 12px;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 14px;
-      touch-action: manipulation;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      line-height: normal;
     }
-    button:active, .header-link:active { transform: translateY(1px); }
+    #menuBtn:active { background: #333; }
 
-    #toggleSidebar { border: 1px solid #555; }
+    /* --- MAIN MENU DROPDOWN --- */
+    #main-menu {
+      display: none;
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.9);
+      z-index: 3000;
+      min-width: 200px;
+      overflow: hidden;
+    }
+
+    .menu-item {
+        display: block;
+        padding: 12px 16px;
+        color: #eee;
+        text-decoration: none;
+        border-bottom: 1px solid #333;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    .menu-item:hover { background: #333; }
+    .menu-item:last-child { border-bottom: none; }
+    .menu-item.danger { color: #ff6b6b; }
 
     /* --- LAYOUT --- */
     main {
@@ -141,7 +162,18 @@
     .btn-green { background: var(--accent); color: white; width: 100%; font-weight: bold; }
     .btn-green:hover { background: #3f9d42; }
 
-    /* --- CONTEXT MENU --- */
+    button {
+      background: #444;
+      color: #eee;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      touch-action: manipulation;
+    }
+
+    /* --- CONTEXT MENU (Tokens) --- */
     #context-menu {
       position: absolute;
       display: none;
@@ -204,7 +236,7 @@
       user-select: none;
       transition: transform 0.2s ease, box-shadow 0.2s;
       color: #fff;
-      touch-action: manipulation; /* Improves touch response */
+      touch-action: manipulation;
     }
 
     @keyframes shake {
@@ -299,11 +331,14 @@
         position: fixed;
         bottom: 5px;
         right: 10px;
-        color: #444;
+        color: #666;
         font-size: 10px;
-        pointer-events: none;
         z-index: 100;
+        cursor: pointer;
+        pointer-events: auto;
+        text-decoration: underline;
     }
+    .version-tag:hover { color: #fff; }
 
     @media (max-width: 768px) {
       main { flex-direction: column; }
@@ -323,13 +358,15 @@
 
 <header>
   <h1>Commander Tokens</h1>
-  <div class="header-controls">
-    <a href="https://github.com/rcooperkaty/mtg-token-board/blob/main/README.md" target="_blank" class="header-link">Instructions</a>
-    <button id="toggleSidebar">Hide Menu</button>
-    <button id="nextTurn">Untap / Next Turn</button>
-    <button id="clearTokens" style="color:#ff8888">Reset</button>
-  </div>
+  <button id="menuBtn">☰</button>
 </header>
+
+<div id="main-menu">
+    <a href="https://github.com/rcooperkaty/mtg-token-board/blob/main/README.md" target="_blank" class="menu-item">Instructions</a>
+    <div class="menu-item" id="menuToggleSidebar">Hide Sidebar</div>
+    <div class="menu-item" id="menuNextTurn">Untap / Next Turn</div>
+    <div class="menu-item danger" id="menuReset">Reset Board</div>
+</div>
 
 <main>
   <div class="sidebar">
@@ -378,22 +415,65 @@
   </div>
 </main>
 
-<div class="version-tag">v1.6 (Touch Support)</div>
+<div class="version-tag" id="versionTag">v1.8 (Menu)</div>
 <div id="context-menu"></div>
 
 <script>
-  // --- LAYOUT LOGIC ---
-  const toggleBtn = document.getElementById("toggleSidebar");
+  // --- MAIN MENU LOGIC ---
+  const menuBtn = document.getElementById("menuBtn");
+  const mainMenu = document.getElementById("main-menu");
+  const menuToggleSidebar = document.getElementById("menuToggleSidebar");
+  const menuNextTurn = document.getElementById("menuNextTurn");
+  const menuReset = document.getElementById("menuReset");
   const mainEl = document.querySelector("main");
 
-  toggleBtn.onclick = () => {
+  // Toggle Menu Open/Close
+  menuBtn.onclick = (e) => {
+    e.stopPropagation();
+    mainMenu.style.display = mainMenu.style.display === "block" ? "none" : "block";
+  };
+
+  // Close menu if clicking outside
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("#main-menu") && e.target !== menuBtn) {
+        mainMenu.style.display = "none";
+    }
+  });
+
+  // 1. Toggle Sidebar
+  menuToggleSidebar.onclick = () => {
     mainEl.classList.toggle("maximize");
     if(mainEl.classList.contains("maximize")) {
-        toggleBtn.innerText = "Show Menu";
+        menuToggleSidebar.innerText = "Show Sidebar";
     } else {
-        toggleBtn.innerText = "Hide Menu";
+        menuToggleSidebar.innerText = "Hide Sidebar";
     }
+    mainMenu.style.display = "none";
   };
+
+  // 2. Next Turn
+  menuNextTurn.onclick = () => {
+    handleNextTurn();
+    mainMenu.style.display = "none";
+  };
+
+  // 3. Reset
+  menuReset.onclick = () => {
+    if(confirm("Clear board?")) {
+      tokens = [];
+      sessionImages = {};
+      save();
+      render();
+    }
+    mainMenu.style.display = "none";
+  };
+
+  // --- VERSION CLICK HANDLER ---
+  document.getElementById("versionTag").addEventListener("click", () => {
+    if(confirm("Reload page to check for updates?")) {
+        window.location.reload();
+    }
+  });
 
   // --- ACCORDION LOGIC ---
   const customHeader = document.getElementById("customHeader");
@@ -461,7 +541,7 @@
       card.className = `token ${t.tapped ? 'tapped' : ''}`;
       card.dataset.color = t.color;
 
-      // --- LONG PRESS LOGIC (NEW) ---
+      // --- LONG PRESS LOGIC ---
       let tokenTimer = null;
       let tokenIsLongPress = false;
 
@@ -470,9 +550,7 @@
         tokenIsLongPress = false;
         tokenTimer = setTimeout(() => {
             tokenIsLongPress = true;
-            // Get touch coordinates
             const touch = e.touches[0];
-            // Mock an event object with clientX/Y
             showTokenContextMenu({ clientX: touch.clientX, clientY: touch.clientY }, t, index);
         }, 500);
       }, {passive: true});
@@ -481,7 +559,7 @@
       card.addEventListener("touchend", (e) => {
         clearTimeout(tokenTimer);
         if (tokenIsLongPress) {
-            e.preventDefault(); // Prevent the standard click from firing
+            e.preventDefault();
         }
       });
 
@@ -493,7 +571,7 @@
       // --- CLICK: TAP HANDLER ---
       card.addEventListener("click", (e) => {
         if(e.target.tagName === "BUTTON") return;
-        if(tokenIsLongPress) return; // Don't tap if it was a long press
+        if(tokenIsLongPress) return;
 
         if (t.summoning && !t.tapped) {
             card.classList.add("shake");
@@ -612,7 +690,7 @@
     });
   }
 
-  // --- MENU LOGIC ---
+  // --- CONTEXT MENUS ---
   const ctxMenu = document.getElementById("context-menu");
 
   function showTokenContextMenu(e, token, index) {
@@ -703,6 +781,7 @@
     }
   });
 
+  // --- FORM HANDLER ---
   document.getElementById("tokenForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const name = document.getElementById("name").value;
@@ -744,7 +823,8 @@
     document.getElementById("name").focus();
   });
 
-  document.getElementById("nextTurn").addEventListener("click", () => {
+  // Logic for Next Turn (Extracted for Menu Use)
+  function handleNextTurn() {
     tokens.forEach(t => { t.summoning = false; t.tapped = false; });
     const consolidated = [];
     const getImg = (t) => sessionImages[t.id] || t.imagePath || 'none';
@@ -762,16 +842,7 @@
     tokens = consolidated.map(c => c.token);
     save();
     render();
-  });
-
-  document.getElementById("clearTokens").addEventListener("click", () => {
-    if(confirm("Clear board?")) {
-      tokens = [];
-      sessionImages = {};
-      save();
-      render();
-    }
-  });
+  }
 
   document.getElementById("presetSearch").addEventListener("input", (e) => {
     const term = e.target.value.toLowerCase();
