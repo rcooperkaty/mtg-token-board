@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Commander Token Board</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #111;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 12px 16px;
+      background: #181818;
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    header button {
+      background: #444;
+      color: #eee;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    header button:hover {
+      background: #666;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(260px, 320px) 1fr;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    @media (max-width: 800px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left panel: presets + form */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+	.fallback-icon {
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	  background: #333;
+	  color: #fff;
+	  font-size: 12px;
+	  font-weight: 700;
+	  width: 20px;
+	  height: 20px;
+	  border-radius: 4px;
+}
+    .panel {
+      background: #181818;
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid #333;
+    }
+
+    .panel h2 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      margin-top: 6px;
+      margin-bottom: 2px;
+      color: #ccc;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #444;
+      background: #111;
+      color: #eee;
+      font-size: 13px;
+    }
+
+    input[readonly] {
+      background: #151515;
+      color: #aaa;
+    }
+
+    input[type="file"] {
+      font-size: 12px;
+      color: #ccc;
+    }
+
+    button[type="submit"] {
+      margin-top: 10px;
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      border: none;
+      background: #2f7d32;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button[type="submit"]:hover {
+      background: #3f9d42;
+    }
+
+    /* Preset picker */
+    #presetSearch {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
+    .preset-picker {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 6px;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .preset-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px;
+      background: #202020;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      font-size: 12px;
+    }
+
+    .preset-item:hover {
+      background: #2a2a2a;
+      border-color: #555;
+    }
+
+    .preset-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      background: #333;
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+
+    .preset-label {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .preset-label span:first-child {
+      font-weight: 600;
+    }
+
+    .preset-label span:last-child {
+      font-size: 11px;
+      color: #aaa;
+    }
+
+    /* Battlefield */
+    #tokenList {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+      align-content: flex-start;
+    }
+
+    .token {
+      aspect-ratio: 5/7;
+      position: relative;
+      background: radial-gradient(circle at 30% 20%, #333, #111);
+      border-radius: 10px;
+      padding: 8px;
+      border: 1px solid #444;
+      min-height: 90px;
+      box-sizing: border-box;
+      overflow: hidden;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .token[data-color="white"]  { box-shadow: 0 0 8px rgba(255,255,255,0.25); }
+    .token[data-color="blue"]   { box-shadow: 0 0 8px rgba(80,160,255,0.35); }
+    .token[data-color="black"]  { box-shadow: 0 0 8px rgba(0,0,0,0.7); }
+    .token[data-color="red"]    { box-shadow: 0 0 8px rgba(255,80,80,0.35); }
+    .token[data-color="green"]  { box-shadow: 0 0 8px rgba(80,200,120,0.35); }
+    .token[data-color="colorless"] { box-shadow: 0 0 8px rgba(200,200,200,0.25); }
+
+    .token-img {
+      width: 100%;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-bottom: 4px;
+    }
+
+    .token-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .token-qty {
+      font-size: 12px;
+      color: #ccc;
+    }
+
+    .token-pt {
+      position: absolute;
+      bottom: 4px;
+      right: 6px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid #666;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+	.haste-badge {
+	  position: absolute;
+	  bottom: 4px;
+	  left: 6px;
+	  padding: 2px 6px;
+	  border-radius: 10px;
+	  background: rgba(255,0,0,0.25);
+	  border: 1px solid rgba(255,0,0,0.4);
+	  font-size: 10px;
+	  text-transform: uppercase;
+}
+    .summoning {
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: rgba(255,255,0,0.15);
+      border: 1px solid rgba(255,255,0,0.4);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .token.tapped {
+      transform: rotate(-12deg);
+      opacity: 0.85;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Commander Token Board</h1>
+    <div>
+      <button id="nextTurn">Next Turn</button>
+      <button id="clearTokens">Clear All</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="sidebar">
+      <!-- Presets -->
+      <div class="panel">
+        <h2>Presets</h2>
+        <input id="presetSearch" type="text" placeholder="Search tokens…" />
+        <div id="presetPicker" class="preset-picker"></div>
+        <!-- Hidden real select for logic -->
+        <select id="preset" style="display:none"></select>
+      </div>
+
+      <!-- Token form -->
+      <div class="panel">
+        <h2>Create Token</h2>
+        <form id="tokenForm">
+          <label for="name">Name</label>
+          <input type="text" id="name" placeholder="Custom name…" />
+
+          <label for="qty">Quantity</label>
+          <input type="number" id="qty" value="1" min="1" required />
+
+          <label for="color">Color</label>
+          <select id="color">
+            <option value="white">White</option>
+            <option value="blue">Blue</option>
+            <option value="black">Black</option>
+            <option value="red">Red</option>
+            <option value="green">Green</option>
+            <option value="colorless">Colorless</option>
+          </select>
+
+          <label for="power">Power</label>
+          <input type="number" id="power" value="1" />
+
+          <label for="toughness">Toughness</label>
+          <input type="number" id="toughness" value="1" />
+
+          <label for="image">Image (session only)</label>
+          <input type="file" id="image" accept="image/*" />
+		<label for="haste">
+		  <input type="checkbox" id="haste"> Haste
+</label>
+          <button type="submit">Add Token</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Battlefield -->
+    <div class="panel">
+      <h2>Battlefield</h2>
+      <div id="tokenList"></div>
+    </div>
+  </main>
+
+  <script>
+    // Session-only image storage
+    let sessionImages = {};
+
+    // Load saved tokens safely
+    let tokens = [];
+    try {
+      tokens = JSON.parse(localStorage.getItem("tokens")) || [];
+    } catch {
+      tokens = [];
+    }
+
+    function save() {
+      localStorage.setItem("tokens", JSON.stringify(tokens));
+    }
+
+    // Disable browser right-click menu
+    document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+    // Commander token presets (alphabetized keys)
+    const PRESETS = {
+      angel:       { name: "Angel",       color: "white",    power: 4, toughness: 4 },
+      bat:         { name: "Bat",         color: "black",    power: 1, toughness: 1 },
+      beast:       { name: "Beast",       color: "green",    power: 3, toughness: 3 },
+      bird:        { name: "Bird",        color: "blue",     power: 1, toughness: 1 },
+      cat:         { name: "Cat",         color: "white",    power: 2, toughness: 2 },
+      clue:        { name: "Clue",        color: "colorless",power: 0, toughness: 0 },
+      construct:   { name: "Construct",   color: "colorless",power: 0, toughness: 0 },
+      devil:       { name: "Devil",       color: "red",      power: 1, toughness: 1 },
+      demon:       { name: "Demon",       color: "black",    power: 5, toughness: 5 },
+      drake:       { name: "Drake",       color: "blue",     power: 2, toughness: 2 },
+      dragon:      { name: "Dragon",      color: "red",      power: 4, toughness: 4 },
+      dwarf:       { name: "Dwarf",       color: "red",      power: 2, toughness: 1 },
+      eldrazi_scion:{name:"Eldrazi Scion",color:"colorless", power: 1, toughness: 1 },
+      eldrazi_spawn:{name:"Eldrazi Spawn",color:"colorless", power: 0, toughness: 1 },
+      elf_warrior: { name: "Elf Warrior", color: "green",    power: 1, toughness: 1 },
+      faerie:      { name: "Faerie",      color: "blue",     power: 1, toughness: 1 },
+      fish:        { name: "Fish",        color: "blue",     power: 1, toughness: 1 },
+      food:        { name: "Food",        color: "colorless",power: 0, toughness: 0 },
+      goblin:      { name: "Goblin",      color: "red",      power: 1, toughness: 1 },
+      golem:       { name: "Golem",       color: "colorless",power: 3, toughness: 3 },
+      horror:      { name: "Horror",      color: "black",    power: 3, toughness: 3 },
+      human:       { name: "Human",       color: "white",    power: 1, toughness: 1 },
+      illusion:    { name: "Illusion",    color: "blue",     power: 2, toughness: 2 },
+      insect:      { name: "Insect",      color: "green",    power: 1, toughness: 1 },
+      knight:      { name: "Knight",      color: "white",    power: 2, toughness: 2 },
+      kraken:      { name: "Kraken",      color: "blue",     power: 9, toughness: 9 },
+      myr:         { name: "Myr",         color: "colorless",power: 1, toughness: 1 },
+      pegasus:     { name: "Pegasus",     color: "white",    power: 1, toughness: 1 },
+      plant:       { name: "Plant",       color: "green",    power: 0, toughness: 1 },
+      rat:         { name: "Rat",         color: "black",    power: 1, toughness: 1 },
+      saproling:   { name: "Saproling",   color: "green",    power: 1, toughness: 1 },
+      servo:       { name: "Servo",       color: "colorless",power: 1, toughness: 1 },
+      skeleton:    { name: "Skeleton",    color: "black",    power: 1, toughness: 1 },
+      soldier:     { name: "Soldier",     color: "white",    power: 1, toughness: 1 },
+      spirit:      { name: "Spirit",      color: "white",    power: 1, toughness: 1 },
+      spirit_blue: { name: "Spirit",      color: "blue",     power: 1, toughness: 1 },
+      thopter:     { name: "Thopter",     color: "blue",     power: 1, toughness: 1 },
+      treasure:    { name: "Treasure",    color: "colorless",power: 0, toughness: 0 },
+      warrior:     { name: "Warrior",     color: "red",      power: 1, toughness: 1 },
+      wolf:        { name: "Wolf",        color: "green",    power: 2, toughness: 2 },
+      zombie:      { name: "Zombie",      color: "black",    power: 2, toughness: 2 },
+      zombie_army: { name: "Zombie Army", color: "black",    power: 0, toughness: 0 }
+    };
+
+    const presetPicker = document.getElementById("presetPicker");
+    const presetSearch = document.getElementById("presetSearch");
+    const presetSelect = document.getElementById("preset");
+    const nameInput = document.getElementById("name");
+    const colorInput = document.getElementById("color");
+    const powerInput = document.getElementById("power");
+    const toughnessInput = document.getElementById("toughness");
+    const hasteInput = document.getElementById("haste");
+
+    // Populate hidden select + preset grid
+    function initPresets() {
+      const customOpt = document.createElement("option");
+      customOpt.value = "";
+      customOpt.textContent = "Custom Token";
+      presetSelect.appendChild(customOpt);
+
+      Object.keys(PRESETS).sort().forEach(key => {
+        const p = PRESETS[key];
+        const opt = document.createElement("option");
+        opt.value = key;
+        opt.textContent = p.name;
+        presetSelect.appendChild(opt);
+      });
+
+      renderPresetPicker();
+    }
+
+    function renderPresetPicker() {
+      presetPicker.innerHTML = "";
+
+      Object.keys(PRESETS).sort().forEach(key => {
+        const p = PRESETS[key];
+
+        const item = document.createElement("div");
+        item.className = "preset-item";
+        item.dataset.key = key;
+
+        const icon = document.createElement("div");
+        icon.className = "preset-icon fallback-icon";
+        icon.textContent = p.name[0];
+
+        const label = document.createElement("div");
+        label.className = "preset-label";
+
+        const line1 = document.createElement("span");
+        line1.textContent = p.name;
+
+        const line2 = document.createElement("span");
+        line2.textContent = `${p.power}/${p.toughness} • ${p.color}`;
+
+        label.appendChild(line1);
+        label.appendChild(line2);
+
+        item.appendChild(icon);
+        item.appendChild(label);
+
+        item.addEventListener("click", () => {
+          presetSelect.value = key;
+          presetSelect.dispatchEvent(new Event("change"));
+        });
+
+        presetPicker.appendChild(item);
+      });
+    }
+
+    // Search filter
+    presetSearch.addEventListener("input", () => {
+      const query = presetSearch.value.toLowerCase();
+      document.querySelectorAll(".preset-item").forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(query) ? "flex" : "none";
+      });
+    });
+
+    // Auto-fill fields when preset changes
+    presetSelect.addEventListener("change", () => {
+      const key = presetSelect.value;
+
+      if (!key || !PRESETS[key]) {
+        nameInput.value = "";
+        colorInput.value = "white";
+        powerInput.value = 1;
+        toughnessInput.value = 1;
+
+        nameInput.readOnly = false;
+        colorInput.disabled = false;
+        powerInput.readOnly = false;
+        toughnessInput.readOnly = false;
+        return;
+      }
+
+      const p = PRESETS[key];
+      nameInput.value = p.name;
+      colorInput.value = p.color;
+      powerInput.value = p.power;
+      toughnessInput.value = p.toughness;
+
+      nameInput.readOnly = true;
+      colorInput.disabled = true;
+      powerInput.readOnly = true;
+      toughnessInput.readOnly = true;
+    });
+
+    // Render tokens
+    function render() {
+      const list = document.getElementById("tokenList");
+      list.innerHTML = "";
+
+      tokens.forEach((t, i) => {
+        const card = document.createElement("div");
+        card.className = "token";
+        card.dataset.color = t.color;
+        if (t.tapped) card.classList.add("tapped");
+
+        if (sessionImages[t.id]) {
+          const img = document.createElement("img");
+          img.src = sessionImages[t.id];
+          img.className = "token-img";
+          card.appendChild(img);
+        }
+
+        const name = document.createElement("div");
+        name.className = "token-name";
+        name.textContent = t.name;
+        card.appendChild(name);
+
+        const qty = document.createElement("div");
+        qty.className = "token-qty";
+        qty.textContent = "x" + t.qty;
+        card.appendChild(qty);
+
+        const pt = document.createElement("div");
+        pt.className = "token-pt";
+        pt.textContent = `${t.power}/${t.toughness}`;
+        card.appendChild(pt);
+
+        if (t.summoning) {
+          const s = document.createElement("div");
+          s.className = "summoning";
+          s.textContent = "Summoning Sick";
+          card.appendChild(s);
+        }
+
+        if (t.haste) {
+          const h = document.createElement("div");
+          h.className = "haste-badge";
+          h.textContent = "Haste";
+          card.appendChild(h);
+        }
+
+        // Tap/untap
+        card.addEventListener("click", () => {
+          if (t.summoning) return;
+          t.tapped = !t.tapped;
+          save();
+          render();
+        });
+
+        // Right-click remove
+        card.addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+          if (t.qty > 1) {
+            t.qty -= 1;
+          } else {
+            tokens.splice(i, 1);
+            delete sessionImages[t.id];
+          }
+          save();
+          render();
+        });
+
+        // Long-press remove
+        let pressTimer;
+        card.addEventListener("touchstart", () => {
+          pressTimer = setTimeout(() => {
+            if (t.qty > 1) {
+              t.qty -= 1;
+            } else {
+              tokens.splice(i, 1);
+              delete sessionImages[t.id];
+            }
+            save();
+            render();
+          }, 500);
+        });
+        card.addEventListener("touchend", () => clearTimeout(pressTimer));
+        card.addEventListener("touchmove", () => clearTimeout(pressTimer));
+
+        list.appendChild(card);
+      });
+    }
+
+    // Add token
+    document.getElementById("tokenForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const presetKey = presetSelect.value;
+      const file = document.getElementById("image").files[0];
+      const qty = parseInt(document.getElementById("qty").value);
+      const haste = hasteInput.checked;
+
+      let name, color, power, toughness;
+
+      if (presetKey && PRESETS[presetKey]) {
+        const p = PRESETS[presetKey];
+        name = p.name;
+        color = p.color;
+        power = p.power;
+        toughness = p.toughness;
+      } else {
+        name = nameInput.value.trim();
+        color = colorInput.value;
+        power = parseInt(powerInput.value);
+        toughness = parseInt(toughnessInput.value);
+
+        if (!name) {
+          alert("Please enter a name or choose a preset.");
+          return;
+        }
+      }
+
+      const summoning = !haste;
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const id = crypto.randomUUID();
+          sessionImages[id] = reader.result;
+
+          tokens.push({
+            id,
+            name,
+            qty,
+            color,
+            power,
+            toughness,
+            haste,
+            summoning,
+            tapped: false,
+            imageUrl: null
+          });
+
+          save();
+          render();
+          e.target.reset();
+          presetSelect.value = "";
+          presetSelect.dispatchEvent(new Event("change"));
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      tokens.push({
+        id: crypto.randomUUID(),
+        name,
+        qty,
+        color,
+        power,
+        toughness,
+        haste,
+        summoning,
+        tapped: false,
+        imageUrl: null
+      });
+
+      save();
+      render();
+      e.target.reset();
+      presetSelect.value = "";
+      presetSelect.dispatchEvent(new Event("change"));
+    });
+
+    document.getElementById("nextTurn").addEventListener("click", () => {
+      tokens.forEach(t => t.summoning = false);
+      save();
+      render();
+    });
+
+    document.getElementById("clearTokens").addEventListener("click", () => {
+      tokens = [];
+      sessionImages = {};
+      save();
+      render();
+    });
+
+    // Init
+    initPresets();
+    presetSelect.dispatchEvent(new Event("change"));
+    render();
+</script>
+</body>
+</html>
