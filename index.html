@@ -4,353 +4,177 @@
   <meta charset="UTF-8" />
   <title>Commander Token Board</title>
 
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TokenBoard">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#111111">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
   <style>
     :root {
       --bg-dark: #111;
       --bg-panel: #181818;
       --border: #333;
       --accent: #2f7d32;
+      --safe-top: env(safe-area-inset-top, 20px);
+      --safe-bottom: env(safe-area-inset-bottom, 20px);
+      --safe-left: env(safe-area-inset-left, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+    }
+    * { -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-dark); color: #eee; display: flex; flex-direction: column;
+      height: 100vh; overflow: hidden; -webkit-user-select: none; user-select: none;
+      padding-top: var(--safe-top); padding-bottom: var(--safe-bottom);
+      padding-left: var(--safe-left); padding-right: var(--safe-right);
     }
 
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, sans-serif;
-      background: var(--bg-dark);
-      color: #eee;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-      -webkit-user-select: none;
-      user-select: none;
+    /* --- INPUTS & BUTTONS --- */
+    input, select, textarea {
+      font-size: 16px !important; padding: 12px; border-radius: 6px;
+      border: 1px solid #444; background: #222; color: #eee; width: 100%; box-sizing: border-box; margin-bottom: 10px;
+    }
+    input:focus, select:focus, textarea:focus { outline: 2px solid #555; border-color: transparent; }
+    button {
+      background: #444; color: #eee; border: none; padding: 12px 16px; border-radius: 6px;
+      cursor: pointer; font-size: 16px; font-weight: 500; touch-action: manipulation;
+    }
+    button:active { transform: scale(0.98); }
+    .btn-green { background: var(--accent); color: white; width: 100%; font-weight: bold; }
+
+    /* --- FLOATING ACTION BUTTON (NEXT TURN) --- */
+    #fabNextTurn {
+        position: fixed;
+        bottom: calc(20px + var(--safe-bottom));
+        right: calc(20px + var(--safe-right));
+        background: var(--accent);
+        color: white;
+        padding: 14px 24px;
+        border-radius: 50px;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        z-index: 1000;
+        border: 1px solid rgba(255,255,255,0.2);
+        display: none; /* Hidden by default */
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        transition: transform 0.2s, opacity 0.2s;
+    }
+    #fabNextTurn:active { transform: scale(0.95); }
+    #fabNextTurn.visible { display: flex; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+    @keyframes popIn {
+        from { opacity: 0; transform: scale(0.5) translateY(20px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     /* --- HEADER --- */
     header {
-      padding: 10px 16px;
-      background: var(--bg-panel);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-shrink: 0;
-      z-index: 2000; /* Higher than menu */
-      position: relative;
+      padding: 10px 16px; background: var(--bg-panel); border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+      z-index: 2000; position: relative; height: 50px;
     }
+    header h1 { font-size: 20px; margin: 0; font-weight: 700; }
+    #menuBtn { background: transparent; border: 1px solid #444; font-size: 24px; padding: 4px 16px; height: 44px; display: flex; align-items: center; }
 
-    header h1 { font-size: 18px; margin: 0; }
-
-    /* Hamburger Button */
-    #menuBtn {
-      background: transparent;
-      border: 1px solid #444;
-      color: #eee;
-      font-size: 20px;
-      padding: 4px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    #menuBtn:active { background: #333; }
-
-    /* --- MAIN MENU DROPDOWN --- */
+    /* --- MENU --- */
     #main-menu {
-      display: none;
-      position: absolute;
-      top: 50px;
-      right: 10px;
-      background: #222;
-      border: 1px solid #444;
-      border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.9);
-      z-index: 3000;
-      min-width: 200px;
-      overflow: hidden;
+      display: none; position: absolute; top: 60px; right: 10px; background: #222;
+      border: 1px solid #444; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.9);
+      z-index: 3000; min-width: 220px; overflow: hidden;
     }
-
-    .menu-item {
-        display: block;
-        padding: 12px 16px;
-        color: #eee;
-        text-decoration: none;
-        border-bottom: 1px solid #333;
-        font-size: 14px;
-        cursor: pointer;
-    }
-    .menu-item:hover { background: #333; }
-    .menu-item:last-child { border-bottom: none; }
-    .menu-item.danger { color: #ff6b6b; }
+    .menu-item { display: block; padding: 16px; color: #eee; text-decoration: none; border-bottom: 1px solid #333; font-size: 16px; cursor: pointer; }
+    .menu-item:active { background: #333; }
 
     /* --- LAYOUT --- */
-    main {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    /* MAXIMIZE MODE: Hide Sidebar */
-    main.maximize .sidebar {
-        display: none !important;
-    }
-
+    main { display: flex; flex: 1; overflow: hidden; position: relative; }
+    main.maximize .sidebar { display: none !important; }
     .sidebar {
-      width: 300px;
-      background: #151515;
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      padding: 12px;
-      gap: 12px;
-      flex-shrink: 0;
-      transition: width 0.2s;
+      width: 320px; background: #151515; border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow-y: auto; padding: 16px; gap: 16px;
+      flex-shrink: 0; -webkit-overflow-scrolling: touch;
     }
+    .battlefield { flex: 1; padding: 16px; overflow-y: auto; background: #0a0a0a; -webkit-overflow-scrolling: touch; }
+    .panel { background: var(--bg-panel); border-radius: 12px; padding: 16px; border: 1px solid var(--border); }
+    h2 { margin: 0 0 12px; font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+    .accordion-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+    #customContent { margin-top: 16px; display: none; }
 
-    .battlefield {
-      flex: 1;
-      padding: 12px;
-      overflow-y: auto;
-      background: #0a0a0a;
-      position: relative;
+    /* --- MODAL --- */
+    .modal-overlay {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); z-index: 5000; align-items: center; justify-content: center;
+        padding: 20px; box-sizing: border-box; backdrop-filter: blur(5px);
     }
-
-    /* --- PANELS & FORMS --- */
-    .panel {
-      background: var(--bg-panel);
-      border-radius: 8px;
-      padding: 12px;
-      border: 1px solid var(--border);
-      margin-bottom: 12px;
-    }
-
-    h2 { margin: 0 0 10px; font-size: 15px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
-
-    /* Accordion Header Style */
-    .accordion-header {
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 0;
-        padding-bottom: 0;
-    }
-    .accordion-header:hover { color: #fff; }
-
-    /* The hidden content container */
-    #customContent {
-        margin-top: 10px;
-        display: none;
-    }
-
-    input, select {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 8px;
-      margin-bottom: 8px;
-      border-radius: 4px;
-      border: 1px solid #444;
-      background: #222;
-      color: #eee;
-    }
-    input:focus, select:focus { outline: 2px solid #555; border-color: transparent; }
-
-    .btn-green { background: var(--accent); color: white; width: 100%; font-weight: bold; }
-    .btn-green:hover { background: #3f9d42; }
-
-    button {
-      background: #444;
-      color: #eee;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      touch-action: manipulation;
-    }
-
-    /* --- CONTEXT MENU (Tokens) --- */
-    #context-menu {
-      position: absolute;
-      display: none;
-      background: #222;
-      border: 1px solid #555;
-      border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.8);
-      z-index: 1000;
-      min-width: 160px;
-      overflow: hidden;
-    }
-    .ctx-item {
-      padding: 12px 14px;
-      font-size: 14px;
-      cursor: pointer;
-      border-bottom: 1px solid #333;
-    }
-    .ctx-item:hover { background: #333; }
-    .ctx-item:last-child { border-bottom: none; }
-    .ctx-danger { color: #ff6b6b; }
+    .modal { background: #222; padding: 24px; border-radius: 12px; width: 100%; max-width: 500px; border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
     /* --- PRESETS --- */
-    .preset-picker {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 6px;
-      max-height: 250px;
-      overflow-y: auto;
-    }
+    .preset-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; max-height: 250px; overflow-y: auto; }
     .preset-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px;
-      background: #222;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      border: 1px solid transparent;
-      touch-action: none;
+      display: flex; align-items: center; gap: 10px; padding: 12px; background: #222;
+      border-radius: 8px; cursor: pointer; font-size: 14px; border: 1px solid transparent; touch-action: manipulation;
     }
-    .preset-item:hover { border-color: #666; background: #2a2a2a; }
+    .preset-item:active { background: #333; transform: scale(0.98); }
 
-    /* --- TOKEN GRID --- */
-    #tokenList {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 12px;
-      padding-bottom: 60px;
-    }
-
+    /* --- TOKENS --- */
+    #tokenList { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 16px; padding-bottom: 80px; }
     .token {
-      position: relative;
-      aspect-ratio: 5/7;
-      border-radius: 8px;
-      border: 2px solid transparent;
-      padding: 6px;
-      display: flex;
-      flex-direction: column;
-      user-select: none;
-      transition: transform 0.2s ease, box-shadow 0.2s;
-      color: #fff;
-      touch-action: manipulation;
+      position: relative; aspect-ratio: 5/7; border-radius: 12px; border: 2px solid transparent;
+      padding: 6px; display: flex; flex-direction: column; background: #222;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5); touch-action: manipulation;
     }
+    .token.tapped { transform: rotate(5deg) translateY(10px); opacity: 0.7; filter: grayscale(0.5); }
 
+    .token.shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
     @keyframes shake {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-4px); }
-      50% { transform: translateX(4px); }
-      75% { transform: translateX(-4px); }
-      100% { transform: translateX(0); }
-    }
-    .token.shake { animation: shake 0.3s; }
-
-    /* COLORS */
-    .token[data-color="white"] { background: #545450; border-color: #a8a8a0; box-shadow: 0 0 10px rgba(255,255,230,0.2); }
-    .token[data-color="blue"] { background: #1d3a5e; border-color: #4a86c0; box-shadow: 0 0 10px rgba(0,100,255,0.3); }
-    .token[data-color="black"] { background: #2e2e2e; border-color: #5e5e5e; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-    .token[data-color="red"] { background: #5e1d1d; border-color: #c04a4a; box-shadow: 0 0 10px rgba(255,50,50,0.3); }
-    .token[data-color="green"] { background: #1d4a1d; border-color: #4ac04a; box-shadow: 0 0 10px rgba(0,200,100,0.3); }
-    .token[data-color="colorless"] { background: #444444; border-color: #888888; box-shadow: 0 0 10px rgba(150,150,150,0.3); }
-
-    .token.tapped {
-      transform: rotate(10deg) translateY(10px);
-      opacity: 0.8;
-      filter: grayscale(0.3);
+      10%, 90% { transform: translate3d(-2px, 0, 0); }
+      20%, 80% { transform: translate3d(4px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+      40%, 60% { transform: translate3d(6px, 0, 0); }
     }
 
     .token-img-container {
-      flex: 1;
-      background: rgba(0,0,0,0.3);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      border: 1px solid rgba(0,0,0,0.2);
+      flex: 1; background: rgba(0,0,0,0.3); border-radius: 6px; overflow: hidden; margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.1);
     }
     .token-img { width: 100%; height: 100%; object-fit: cover; }
-    .fallback-text { font-size: 40px; color: rgba(255,255,255,0.3); font-weight: 800; }
+    .fallback-text { font-size: 40px; color: rgba(255,255,255,0.2); font-weight: 800; }
+    .token-details { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; height: 28px; }
+    .token-qty { font-size: 14px; color: #fff; background: rgba(0,0,0,0.7); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); }
 
-    .token-details {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 13px;
-      font-weight: 700;
-      height: 24px;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-    }
-
-    .token-qty {
-      font-size: 12px;
-      color: #fff;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 2px 6px;
-      border-radius: 4px;
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-
-    .badge {
-      position: absolute;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: bold;
-      text-transform: uppercase;
-      z-index: 2;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
-    }
-    .pt-badge { bottom: 4px; right: 4px; background: rgba(0,0,0,0.85); border: 1px solid #999; font-size: 14px; color: #fff; }
-    .haste-badge { bottom: 4px; left: 4px; background: rgba(200,50,50,0.9); border: 1px solid red; color: #fff; }
-    .sick-badge { top: 4px; right: 4px; background: rgba(180,180,0,0.9); border: 1px solid yellow; color: #fff; }
-
-    .token-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 4px;
-      margin-top: 4px;
-    }
-    .token-actions button {
-      padding: 4px;
-      font-size: 10px;
-      background: rgba(0,0,0,0.4);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: #ddd;
-    }
-    .token-actions button:hover { background: rgba(0,0,0,0.6); }
+    .token-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 4px; }
+    .token-actions button { padding: 8px 0; font-size: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #ccc; }
+    .token-actions button:hover { background: rgba(255,255,255,0.1); }
     .token-actions button.buff { color: #8f8; }
     .token-actions button.nerf { color: #f88; }
 
-    .version-tag {
-        position: fixed;
-        bottom: 5px;
-        right: 10px;
-        color: #666;
-        font-size: 10px;
-        z-index: 100;
-        cursor: pointer;
-        pointer-events: auto;
-        text-decoration: underline;
+    /* Badges */
+    .badge { position: absolute; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+    .pt-badge { bottom: 6px; right: 6px; background: rgba(0,0,0,0.9); border: 1px solid #999; font-size: 16px; color: #fff; }
+    .haste-badge { bottom: 6px; left: 6px; background: rgba(200,50,50,0.9); border: 1px solid red; color: #fff; }
+    .sick-badge { top: 6px; right: 6px; background: rgba(180,180,0,0.9); border: 1px solid yellow; color: #fff; }
+
+    /* Context Menu */
+    #context-menu {
+      position: absolute; display: none; background: #222; border: 1px solid #555;
+      border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 4000; min-width: 200px;
     }
-    .version-tag:hover { color: #fff; }
+
+    /* Colors */
+    .token[data-color="white"] { background: #545450; border-color: #a8a8a0; }
+    .token[data-color="blue"] { background: #1d3a5e; border-color: #4a86c0; }
+    .token[data-color="black"] { background: #2e2e2e; border-color: #5e5e5e; }
+    .token[data-color="red"] { background: #5e1d1d; border-color: #c04a4a; }
+    .token[data-color="green"] { background: #1d4a1d; border-color: #4ac04a; }
+    .token[data-color="gold"] { background: #5e4b1d; border-color: #d4af37; }
+    .token[data-color="colorless"] { background: #444444; border-color: #888888; }
 
     @media (max-width: 768px) {
       main { flex-direction: column; }
-      .sidebar {
-        width: 100%;
-        max-height: 250px;
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        overflow-y: scroll;
-      }
-      #tokenList { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
-      .token { aspect-ratio: 4/6; }
+      .sidebar { width: 100%; max-height: 40vh; border-right: none; border-bottom: 1px solid var(--border); box-sizing: border-box; }
+      #tokenList { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
     }
   </style>
 </head>
@@ -362,17 +186,33 @@
 </header>
 
 <div id="main-menu">
+    <div class="menu-item" id="menuAddDeck" style="font-weight:bold; color:var(--accent);">+ Add Deck</div>
+    <div class="menu-item" id="menuDefaultList">Restore Default List</div>
+    <div style="border-bottom:1px solid #333; margin:4px 0;"></div>
     <a href="https://github.com/rcooperkaty/mtg-token-board/blob/main/README.md" target="_blank" class="menu-item">Instructions</a>
     <div class="menu-item" id="menuToggleSidebar">Hide Sidebar</div>
     <div class="menu-item" id="menuNextTurn">Untap / Next Turn</div>
-    <div class="menu-item danger" id="menuReset">Reset Board</div>
+    <div class="menu-item" style="color:#ff6b6b;" id="menuReset">Reset Board</div>
+</div>
+
+<div class="modal-overlay" id="deckModal">
+    <div class="modal">
+        <h2 style="color:#eee; margin-top:0;">Import Deck</h2>
+        <p style="font-size:14px; color:#aaa; margin-bottom:12px; line-height:1.4;">Paste your decklist. We will prioritize local art, then fallback to Scryfall.</p>
+        <textarea id="deckInput" placeholder="1 Sol Ring&#10;1 Rhys the Redeemed&#10;..."></textarea>
+        <div id="importStatus" style="font-size:13px; color:#888; font-style:italic; margin-bottom:10px;"></div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button onclick="closeDeckModal()" style="background:#333;">Cancel</button>
+            <button onclick="processDeckImport()" class="btn-green" style="width:auto;">Import</button>
+        </div>
+    </div>
 </div>
 
 <main>
   <div class="sidebar">
     <div class="panel">
       <h2>Quick Add</h2>
-      <input id="presetSearch" type="text" placeholder="Search (e.g. Goblin)..." />
+      <input id="presetSearch" type="text" placeholder="Start typing to find tokens..." />
       <div id="presetPicker" class="preset-picker"></div>
     </div>
 
@@ -381,11 +221,10 @@
         <span>Custom Token</span>
         <span id="customArrow">▶</span>
       </h2>
-
       <div id="customContent">
           <form id="tokenForm">
             <input type="text" id="name" placeholder="Name" required />
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:10px;">
               <input type="number" id="qty" value="1" min="1" placeholder="Qty" style="flex:1" />
               <select id="color" style="flex:1">
                 <option value="white">White</option>
@@ -393,16 +232,17 @@
                 <option value="black">Black</option>
                 <option value="red">Red</option>
                 <option value="green">Green</option>
+                <option value="gold">Gold</option>
                 <option value="colorless">Colorless</option>
               </select>
             </div>
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:10px;">
               <input type="number" id="power" value="1" placeholder="Pow" style="flex:1" />
               <input type="number" id="toughness" value="1" placeholder="Tgh" style="flex:1" />
             </div>
-            <input type="file" id="image" accept="image/*" />
-            <label style="font-size:12px; display:flex; align-items:center; gap:6px; margin-bottom:10px; cursor:pointer">
-              <input type="checkbox" id="haste"> Creature has Haste
+            <input type="file" id="image" accept="image/*" style="padding:10px; font-size:14px;" />
+            <label style="font-size:16px; display:flex; align-items:center; gap:10px; margin-bottom:16px; cursor:pointer">
+              <input type="checkbox" id="haste" style="width:24px; height:24px; margin:0;"> Creature has Haste
             </label>
             <button type="submit" class="btn-green">Create Token</button>
           </form>
@@ -412,546 +252,410 @@
 
   <div class="battlefield">
     <div id="tokenList"></div>
+    <button id="fabNextTurn">Next Turn ↺</button>
   </div>
 </main>
 
-<div class="version-tag" id="versionTag">v1.8 (Menu)</div>
 <div id="context-menu"></div>
 
 <script>
-  // --- MAIN MENU LOGIC ---
+  // --- DEFAULT PRESETS ---
+  const DEFAULT_PRESETS = {
+    angel:        { name: "Angel",        color: "white",     power: 4, toughness: 4 },
+    beast:        { name: "Beast",        color: "green",     power: 3, toughness: 3 },
+    bird:         { name: "Bird",         color: "blue",      power: 1, toughness: 1 },
+    cat:          { name: "Cat",          color: "white",     power: 2, toughness: 2 },
+    clue:         { name: "Clue",         color: "colorless", power: 0, toughness: 0 },
+    construct:    { name: "Construct",    color: "colorless", power: 0, toughness: 0 },
+    demon:        { name: "Demon",        color: "black",     power: 5, toughness: 5 },
+    dragon:       { name: "Dragon",       color: "red",       power: 4, toughness: 4 },
+    drake:        { name: "Drake",        color: "blue",      power: 2, toughness: 2 },
+    elf:          { name: "Elf Warrior",  color: "green",     power: 1, toughness: 1 },
+    food:         { name: "Food",         color: "colorless", power: 0, toughness: 0 },
+    goblin:       { name: "Goblin",       color: "red",       power: 1, toughness: 1 },
+    golem:        { name: "Golem",        color: "colorless", power: 3, toughness: 3 },
+    human:        { name: "Human",        color: "white",     power: 1, toughness: 1 },
+    insect:       { name: "Insect",       color: "green",     power: 1, toughness: 1 },
+    knight:       { name: "Knight",       color: "white",     power: 2, toughness: 2 },
+    myr:          { name: "Myr",          color: "colorless", power: 1, toughness: 1 },
+    pegasus:      { name: "Pegasus",      color: "white",     power: 1, toughness: 1 },
+    plant:        { name: "Plant",        color: "green",     power: 0, toughness: 1 },
+    rat:          { name: "Rat",          color: "black",     power: 1, toughness: 1 },
+    saproling:    { name: "Saproling",    color: "green",     power: 1, toughness: 1 },
+    soldier:      { name: "Soldier",      color: "white",     power: 1, toughness: 1 },
+    spirit:       { name: "Spirit",       color: "white",     power: 1, toughness: 1 },
+    thopter:      { name: "Thopter",      color: "colorless", power: 1, toughness: 1 },
+    treasure:     { name: "Treasure",     color: "colorless", power: 0, toughness: 0 },
+    wolf:         { name: "Wolf",         color: "green",     power: 2, toughness: 2 },
+    zombie:       { name: "Zombie",       color: "black",     power: 2, toughness: 2 }
+  };
+
+  let activePresets = { ...DEFAULT_PRESETS };
+  let suggestedTokens = [];
+
+  // --- UI LOGIC ---
   const menuBtn = document.getElementById("menuBtn");
   const mainMenu = document.getElementById("main-menu");
-  const menuToggleSidebar = document.getElementById("menuToggleSidebar");
-  const menuNextTurn = document.getElementById("menuNextTurn");
-  const menuReset = document.getElementById("menuReset");
-  const mainEl = document.querySelector("main");
+  menuBtn.onclick = (e) => { e.stopPropagation(); mainMenu.style.display = mainMenu.style.display === "block" ? "none" : "block"; };
+  document.addEventListener("click", (e) => { if (!e.target.closest("#main-menu") && e.target !== menuBtn) mainMenu.style.display = "none"; });
 
-  // Toggle Menu Open/Close
-  menuBtn.onclick = (e) => {
-    e.stopPropagation();
-    mainMenu.style.display = mainMenu.style.display === "block" ? "none" : "block";
-  };
+  document.getElementById("menuToggleSidebar").onclick = () => { document.querySelector("main").classList.toggle("maximize"); mainMenu.style.display = "none"; };
+  document.getElementById("menuNextTurn").onclick = () => { handleNextTurn(); mainMenu.style.display = "none"; };
+  document.getElementById("menuReset").onclick = () => { if(confirm("Clear board?")) { tokens = []; sessionImages = {}; save(); render(); } mainMenu.style.display = "none"; };
+  document.getElementById("menuDefaultList").onclick = () => { activePresets = { ...DEFAULT_PRESETS }; suggestedTokens = []; renderPresets(""); mainMenu.style.display = "none"; };
+  document.getElementById("menuAddDeck").onclick = () => { document.getElementById("deckModal").style.display = "flex"; document.getElementById("deckInput").focus(); mainMenu.style.display = "none"; };
+  function closeDeckModal() { document.getElementById("deckModal").style.display = "none"; document.getElementById("importStatus").innerText = ""; }
 
-  // Close menu if clicking outside
-  document.addEventListener("click", (e) => {
-    if (!e.target.closest("#main-menu") && e.target !== menuBtn) {
-        mainMenu.style.display = "none";
-    }
-  });
+  // --- DECK IMPORT (PRIORITIZE LOCAL + COUNT FREQUENCY) ---
+  async function processDeckImport() {
+    const rawText = document.getElementById("deckInput").value;
+    const statusEl = document.getElementById("importStatus");
+    if(!rawText.trim()) return;
+    statusEl.innerText = "Parsing...";
+    const lines = rawText.split('\n');
+    const cardNames = lines.map(line => line.replace(/^\d+x?\s+/, "").split("(")[0].trim()).filter(n => n.length > 0);
 
-  // 1. Toggle Sidebar
-  menuToggleSidebar.onclick = () => {
-    mainEl.classList.toggle("maximize");
-    if(mainEl.classList.contains("maximize")) {
-        menuToggleSidebar.innerText = "Show Sidebar";
-    } else {
-        menuToggleSidebar.innerText = "Hide Sidebar";
-    }
-    mainMenu.style.display = "none";
-  };
+    statusEl.innerText = `Fetching ${cardNames.length} cards...`;
 
-  // 2. Next Turn
-  menuNextTurn.onclick = () => {
-    handleNextTurn();
-    mainMenu.style.display = "none";
-  };
+    // Use Map to count how many cards produce a specific token URI
+    const tokenCounts = {}; // Key: URI, Value: Count
+    const tokenIds = new Set(); // Unique URIs to fetch
+    const batches = [];
+    while(cardNames.length > 0) batches.push(cardNames.splice(0, 75));
 
-  // 3. Reset
-  menuReset.onclick = () => {
-    if(confirm("Clear board?")) {
-      tokens = [];
-      sessionImages = {};
-      save();
-      render();
-    }
-    mainMenu.style.display = "none";
-  };
+    try {
+        for(let batch of batches) {
+            const resp = await fetch("https://api.scryfall.com/cards/collection", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ identifiers: batch.map(name => ({ name })) })
+            });
+            const data = await resp.json();
+            data.data.forEach(card => {
+                if(card.all_parts) {
+                    card.all_parts.forEach(part => {
+                        if(part.component === "token") {
+                            tokenIds.add(part.uri);
+                            tokenCounts[part.uri] = (tokenCounts[part.uri] || 0) + 1;
+                        }
+                    });
+                }
+            });
+        }
 
-  // --- VERSION CLICK HANDLER ---
-  document.getElementById("versionTag").addEventListener("click", () => {
-    if(confirm("Reload page to check for updates?")) {
-        window.location.reload();
-    }
-  });
+        if(tokenIds.size === 0) { statusEl.innerText = "No tokens found."; return; }
 
-  // --- ACCORDION LOGIC ---
-  const customHeader = document.getElementById("customHeader");
-  const customContent = document.getElementById("customContent");
-  const customArrow = document.getElementById("customArrow");
+        statusEl.innerText = `Loading ${tokenIds.size} tokens...`;
+        const newTokenList = {};
 
-  function toggleCustomPanel(state) {
-    const currentDisplay = window.getComputedStyle(customContent).display;
-    const isClosed = currentDisplay === "none";
+        for(let uri of tokenIds) {
+            const tokenResp = await fetch(uri);
+            const t = await tokenResp.json();
 
-    let shouldOpen = isClosed;
-    if (state === true) shouldOpen = true;
-    if (state === false) shouldOpen = false;
+            let scryfallUrl = null;
+            if (t.image_uris && t.image_uris.art_crop) scryfallUrl = t.image_uris.art_crop;
+            else if (t.card_faces && t.card_faces[0].image_uris) scryfallUrl = t.card_faces[0].image_uris.art_crop;
 
-    if (shouldOpen) {
-        customContent.style.display = "block";
-        customArrow.innerText = "▼";
-    } else {
-        customContent.style.display = "none";
-        customArrow.innerText = "▶";
-    }
+            let color = "colorless";
+            if(t.colors && t.colors.length > 0) color = (t.colors.length > 1) ? "gold" : ({ 'W':'white', 'U':'blue', 'B':'black', 'R':'red', 'G':'green' }[t.colors[0]] || "colorless");
+
+            const key = t.name.toLowerCase().replace(/\s/g, "_");
+
+            // Store count in the object temporarily for sorting
+            newTokenList[key] = {
+                name: t.name, color: color,
+                power: parseInt(t.power)||0, toughness: parseInt(t.toughness)||1,
+                imagePath: `${t.name}.png`, scryfallUrl: scryfallUrl,
+                frequency: tokenCounts[uri] || 0
+            };
+        }
+
+        // Determine Top 4
+        suggestedTokens = Object.keys(newTokenList)
+            .sort((a, b) => newTokenList[b].frequency - newTokenList[a].frequency)
+            .slice(0, 4);
+
+        activePresets = newTokenList;
+        renderPresets(""); // Render with empty filter (triggering suggestions)
+        closeDeckModal();
+        alert("Deck Imported! Top tokens added to Quick List.");
+
+    } catch (err) { console.error(err); statusEl.innerText = "Error: " + err.message; }
   }
-
-  customHeader.onclick = () => toggleCustomPanel();
-
 
   // --- APP STATE ---
   let tokens = [];
   let sessionImages = {};
-  let selectedPresetImage = null;
+  let selectedPreset = null;
 
-  try {
-    tokens = JSON.parse(localStorage.getItem("mtg_tokens")) || [];
-  } catch { tokens = []; }
+  try { tokens = JSON.parse(localStorage.getItem("mtg_tokens")) || []; } catch { tokens = []; }
 
   function addTokenToBoard(newToken) {
     const getImg = (t) => sessionImages[t.id] || t.imagePath || 'none';
     const sig = (t) => `${t.name}|${t.color}|${t.power}|${t.toughness}|${t.counters}|${t.haste}|${t.summoning}|${t.tapped}|${getImg(t)}`;
-
-    const newSignature = sig(newToken);
-    const match = tokens.find(t => sig(t) === newSignature);
+    const match = tokens.find(t => sig(t) === sig(newToken));
 
     if (match) {
       match.qty += newToken.qty;
-      if(sessionImages[newToken.id] && newToken.id !== match.id) {
-          delete sessionImages[newToken.id];
-      }
     } else {
       tokens.push(newToken);
     }
-    save();
-    render();
+    save(); render();
   }
 
-  function save() {
-    localStorage.setItem("mtg_tokens", JSON.stringify(tokens));
-  }
+  function save() { localStorage.setItem("mtg_tokens", JSON.stringify(tokens)); }
 
+  // --- RENDER BOARD ---
   function render() {
     const list = document.getElementById("tokenList");
+    const fab = document.getElementById("fabNextTurn");
     list.innerHTML = "";
+
+    // Toggle FAB Visibility based on token count
+    if (tokens.length > 0) fab.classList.add("visible");
+    else fab.classList.remove("visible");
 
     tokens.forEach((t, index) => {
       const card = document.createElement("div");
       card.className = `token ${t.tapped ? 'tapped' : ''}`;
       card.dataset.color = t.color;
 
-      // --- LONG PRESS LOGIC ---
-      let tokenTimer = null;
-      let tokenIsLongPress = false;
-
-      // 1. Touch Start
+      let tokenTimer = null, tokenIsLongPress = false;
       card.addEventListener("touchstart", (e) => {
         tokenIsLongPress = false;
-        tokenTimer = setTimeout(() => {
-            tokenIsLongPress = true;
-            const touch = e.touches[0];
-            showTokenContextMenu({ clientX: touch.clientX, clientY: touch.clientY }, t, index);
-        }, 500);
+        tokenTimer = setTimeout(() => { tokenIsLongPress = true; showTokenContextMenu({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }, t, index); }, 500);
       }, {passive: true});
+      card.addEventListener("touchend", (e) => { clearTimeout(tokenTimer); if(tokenIsLongPress) e.preventDefault(); });
+      card.addEventListener("touchmove", () => clearTimeout(tokenTimer));
 
-      // 2. Touch End
-      card.addEventListener("touchend", (e) => {
-        clearTimeout(tokenTimer);
-        if (tokenIsLongPress) {
-            e.preventDefault();
-        }
-      });
-
-      // 3. Touch Move (Cancel if scrolling)
-      card.addEventListener("touchmove", () => {
-        clearTimeout(tokenTimer);
-      });
-
-      // --- CLICK: TAP HANDLER ---
       card.addEventListener("click", (e) => {
-        if(e.target.tagName === "BUTTON") return;
-        if(tokenIsLongPress) return;
-
-        if (t.summoning && !t.tapped) {
-            card.classList.add("shake");
-            setTimeout(() => card.classList.remove("shake"), 300);
-            return;
-        }
-
-        if (t.qty === 1) {
-            t.tapped = !t.tapped;
-        } else {
+        if(e.target.tagName === "BUTTON" || tokenIsLongPress) return;
+        if (t.summoning && !t.tapped) { card.classList.add("shake"); setTimeout(() => card.classList.remove("shake"), 300); return; }
+        if (t.qty === 1) { t.tapped = !t.tapped; } else {
             t.qty--;
-            const singleToken = JSON.parse(JSON.stringify(t));
-            singleToken.qty = 1;
-            singleToken.tapped = !t.tapped;
-            singleToken.id = crypto.randomUUID();
-            if(sessionImages[t.id]) sessionImages[singleToken.id] = sessionImages[t.id];
-            addTokenToBoard(singleToken);
-            return;
+            const single = JSON.parse(JSON.stringify(t));
+            single.qty = 1; single.tapped = !t.tapped; single.id = crypto.randomUUID();
+            if(sessionImages[t.id]) sessionImages[single.id] = sessionImages[t.id];
+            addTokenToBoard(single); return;
         }
-        save();
-        render();
+        save(); render();
       });
 
-      // --- RIGHT CLICK (DESKTOP) ---
-      card.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        showTokenContextMenu(e, t, index);
-      });
+      card.addEventListener("contextmenu", (e) => { e.preventDefault(); showTokenContextMenu(e, t, index); });
 
       const imgContainer = document.createElement("div");
       imgContainer.className = "token-img-container";
 
-      let imgSrc = null;
-      if (sessionImages[t.id]) imgSrc = sessionImages[t.id];
-      else if (t.imagePath) imgSrc = t.imagePath;
+      const img = document.createElement("img");
+      img.className = "token-img";
 
-      if (imgSrc) {
-        const img = document.createElement("img");
-        img.src = imgSrc;
-        img.className = "token-img";
-        img.onerror = function() {
-            this.style.display = 'none';
-            const fb = document.createElement("div");
-            fb.className = "fallback-text";
-            fb.innerText = t.name[0];
-            imgContainer.appendChild(fb);
-        };
-        imgContainer.appendChild(img);
+      if(sessionImages[t.id]) {
+          img.src = sessionImages[t.id];
       } else {
-        const fallback = document.createElement("div");
-        fallback.className = "fallback-text";
-        fallback.innerText = t.name[0];
-        imgContainer.appendChild(fallback);
+          if (t.scryfallUrl) { img.src = t.scryfallUrl; } else { img.src = t.imagePath || `${t.name}.png`; }
+          img.onerror = function() {
+              if (t.scryfallUrl && this.src !== t.scryfallUrl) { this.src = t.scryfallUrl; }
+              else { this.style.display = 'none'; imgContainer.innerHTML += `<div class="fallback-text">${t.name[0]}</div>`; }
+          };
       }
+      imgContainer.appendChild(img);
 
-      const effectivePower = t.power + t.counters;
-      const effectiveToughness = t.toughness + t.counters;
-
-      const ptBadge = document.createElement("div");
-      ptBadge.className = "badge pt-badge";
-      ptBadge.innerText = `${effectivePower}/${effectiveToughness}`;
-      imgContainer.appendChild(ptBadge);
-
-      if (t.summoning) {
-        const sick = document.createElement("div");
-        sick.className = "badge sick-badge";
-        sick.innerText = "ZZZ";
-        imgContainer.appendChild(sick);
-      }
-      if (t.haste) {
-        const haste = document.createElement("div");
-        haste.className = "badge haste-badge";
-        haste.innerText = "HASTE";
-        imgContainer.appendChild(haste);
-      }
+      const effPow = t.power + t.counters;
+      const effTgh = t.toughness + t.counters;
+      imgContainer.innerHTML += `<div class="badge pt-badge">${effPow}/${effTgh}</div>`;
+      if (t.summoning) imgContainer.innerHTML += `<div class="badge sick-badge">ZZZ</div>`;
+      if (t.haste) imgContainer.innerHTML += `<div class="badge haste-badge">HASTE</div>`;
       card.appendChild(imgContainer);
 
-      const details = document.createElement("div");
-      details.className = "token-details";
-      details.innerHTML = `<span>${t.name}</span> <span class="token-qty">x${t.qty}</span>`;
-      card.appendChild(details);
+      card.innerHTML += `<div class="token-details"><span>${t.name}</span> <span class="token-qty">x${t.qty}</span></div>`;
 
       const actions = document.createElement("div");
       actions.className = "token-actions";
-
-      const btnBuff = document.createElement("button");
-      btnBuff.className = "buff";
-      btnBuff.innerText = "+1/+1";
-      btnBuff.onclick = () => { t.counters++; save(); render(); };
-
-      const btnNerf = document.createElement("button");
-      btnNerf.className = "nerf";
-      btnNerf.innerText = "-1/-1";
-      btnNerf.onclick = () => { t.counters--; save(); render(); };
-
-      const btnClone = document.createElement("button");
-      btnClone.innerText = "Clone";
-      btnClone.onclick = () => {
-         const clone = JSON.parse(JSON.stringify(t));
-         clone.id = crypto.randomUUID();
-         clone.qty = 1;
-         clone.summoning = true;
-         if(clone.haste) clone.summoning = false;
-         clone.tapped = false;
-         clone.counters = 0;
+      const btnBuff = document.createElement("button"); btnBuff.className="buff"; btnBuff.innerText="+1/+1"; btnBuff.onclick=()=>{t.counters++; save(); render();};
+      const btnNerf = document.createElement("button"); btnNerf.className="nerf"; btnNerf.innerText="-1/-1"; btnNerf.onclick=()=>{t.counters--; save(); render();};
+      const btnClone = document.createElement("button"); btnClone.innerText="Clone"; btnClone.onclick=()=>{
+         const clone = JSON.parse(JSON.stringify(t)); clone.id=crypto.randomUUID(); clone.qty=1;
+         clone.summoning = !clone.haste; clone.tapped=false; clone.counters=0;
          if(sessionImages[t.id]) sessionImages[clone.id] = sessionImages[t.id];
          addTokenToBoard(clone);
       };
-
-      actions.appendChild(btnBuff);
-      actions.appendChild(btnNerf);
-      actions.appendChild(btnClone);
+      actions.append(btnBuff, btnNerf, btnClone);
       card.appendChild(actions);
-
       list.appendChild(card);
     });
   }
 
+  // Attach Floating Button to Next Turn logic
+  document.getElementById("fabNextTurn").onclick = handleNextTurn;
+
   // --- CONTEXT MENUS ---
   const ctxMenu = document.getElementById("context-menu");
-
   function showTokenContextMenu(e, token, index) {
     const action = token.tapped ? "Untap" : "Tap";
-    ctxMenu.innerHTML = `
-      <div class="ctx-item" id="ctx-tap-x">${action} Specific Amount...</div>
-      <div class="ctx-item ctx-danger" id="ctx-kill-1">Destroy 1 (Decrease Qty)</div>
-      <div class="ctx-item ctx-danger" id="ctx-kill-all">Delete Entire Stack</div>
-    `;
+    ctxMenu.innerHTML = `<div class="menu-item" id="ctx-tap-x">${action} X...</div><div class="menu-item" style="color:#ff6b6b" id="ctx-kill-1">Destroy 1</div><div class="menu-item" style="color:#ff6b6b" id="ctx-kill-all">Delete Stack</div>`;
     positionMenu(e.clientX, e.clientY);
-
     document.getElementById("ctx-tap-x").onclick = () => {
-       const input = prompt(`How many to ${action}?`, token.qty);
+       const input = prompt(`How many?`, token.qty);
        if(input) {
          const count = parseInt(input);
          if(count > 0 && count < token.qty) {
             token.qty -= count;
             const newStack = JSON.parse(JSON.stringify(token));
-            newStack.qty = count;
-            newStack.tapped = !token.tapped;
-            newStack.id = crypto.randomUUID();
+            newStack.qty = count; newStack.tapped = !token.tapped; newStack.id = crypto.randomUUID();
             if(sessionImages[token.id]) sessionImages[newStack.id] = sessionImages[token.id];
             addTokenToBoard(newStack);
-         } else if (count >= token.qty) {
-            token.tapped = !token.tapped;
-            save(); render();
-         }
+         } else if (count >= token.qty) { token.tapped = !token.tapped; save(); render(); }
        }
        ctxMenu.style.display = "none";
     };
-
-    document.getElementById("ctx-kill-1").onclick = () => {
-      if (token.qty > 1) {
-        token.qty--;
-      } else {
-        delete sessionImages[token.id];
-        tokens.splice(index, 1);
-      }
-      save(); render();
-      ctxMenu.style.display = "none";
-    };
-
-    document.getElementById("ctx-kill-all").onclick = () => {
-      if(confirm(`Remove all ${token.name} tokens?`)) {
-        delete sessionImages[token.id];
-        tokens.splice(index, 1);
-        save(); render();
-      }
-      ctxMenu.style.display = "none";
-    };
+    document.getElementById("ctx-kill-1").onclick = () => { if(token.qty > 1) token.qty--; else { delete sessionImages[token.id]; tokens.splice(index, 1); } save(); render(); ctxMenu.style.display = "none"; };
+    document.getElementById("ctx-kill-all").onclick = () => { if(confirm(`Remove all ${token.name}?`)) { delete sessionImages[token.id]; tokens.splice(index, 1); save(); render(); } ctxMenu.style.display = "none"; };
   }
 
   function positionMenu(x, y) {
     ctxMenu.style.display = "block";
-    const adjustedX = Math.min(x, window.innerWidth - 170);
-    const adjustedY = Math.min(y, window.innerHeight - 100);
-    ctxMenu.style.left = `${adjustedX}px`;
-    ctxMenu.style.top = `${adjustedY}px`;
+    ctxMenu.style.left = `${Math.min(x, window.innerWidth - 220)}px`;
+    ctxMenu.style.top = `${Math.min(y, window.innerHeight - 150)}px`;
   }
 
   function showPresetContextMenu(x, y, p) {
-    ctxMenu.innerHTML = `<div class="ctx-item" id="ctx-quick-create">Quick Create ${p.name}</div>`;
+    ctxMenu.innerHTML = `<div class="menu-item" id="ctx-quick-configure">Configure... (Quantity/Stats)</div>`;
     positionMenu(x, y);
-
-    document.getElementById("ctx-quick-create").onclick = () => {
-        const id = crypto.randomUUID();
-        const token = {
-            id,
-            name: p.name,
-            qty: 1,
-            color: p.color,
-            power: p.power,
-            toughness: p.toughness,
-            haste: false,
-            summoning: true,
-            tapped: false,
-            counters: 0,
-            imagePath: `${p.name}.png`
-        };
-        addTokenToBoard(token);
+    document.getElementById("ctx-quick-configure").onclick = () => {
+        document.getElementById("name").value = p.name;
+        document.getElementById("color").value = p.color;
+        document.getElementById("power").value = p.power;
+        document.getElementById("toughness").value = p.toughness;
+        selectedPreset = p;
+        document.getElementById("customContent").style.display = "block";
+        document.getElementById("customArrow").innerText = "▼";
+        document.getElementById("qty").focus();
+        document.getElementById("qty").select();
         ctxMenu.style.display = "none";
     };
   }
-
-  document.addEventListener("click", (e) => {
-    if (!e.target.closest("#context-menu")) {
-      ctxMenu.style.display = "none";
-    }
-  });
+  document.addEventListener("click", (e) => { if (!e.target.closest("#context-menu")) ctxMenu.style.display = "none"; });
 
   // --- FORM HANDLER ---
   document.getElementById("tokenForm").addEventListener("submit", (e) => {
     e.preventDefault();
-    const name = document.getElementById("name").value;
-    const qty = parseInt(document.getElementById("qty").value);
-    const color = document.getElementById("color").value;
-    const power = parseInt(document.getElementById("power").value) || 0;
-    const toughness = parseInt(document.getElementById("toughness").value) || 1;
-    const haste = document.getElementById("haste").checked;
-    const file = document.getElementById("image").files[0];
-
     const id = crypto.randomUUID();
     const newToken = {
-      id, name, qty, color, power, toughness, haste,
-      summoning: !haste,
-      tapped: false,
-      counters: 0,
-      imagePath: null
+      id,
+      name: document.getElementById("name").value,
+      qty: parseInt(document.getElementById("qty").value),
+      color: document.getElementById("color").value,
+      power: parseInt(document.getElementById("power").value)||0,
+      toughness: parseInt(document.getElementById("toughness").value)||1,
+      haste: document.getElementById("haste").checked,
+      summoning: !document.getElementById("haste").checked,
+      tapped: false, counters: 0,
+      imagePath: null, scryfallUrl: null
     };
-
+    const file = document.getElementById("image").files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = () => {
-        sessionImages[id] = reader.result;
-        addTokenToBoard(newToken);
-        toggleCustomPanel(false);
-      };
+      reader.onload = () => { sessionImages[id] = reader.result; addTokenToBoard(newToken); toggleCustomPanel(false); };
       reader.readAsDataURL(file);
     } else {
-      if (selectedPresetImage) {
-        newToken.imagePath = selectedPresetImage;
-        selectedPresetImage = null;
+      if (selectedPreset) {
+          newToken.imagePath = selectedPreset.imagePath || `${newToken.name}.png`;
+          newToken.scryfallUrl = selectedPreset.scryfallUrl;
+          selectedPreset = null;
       }
-      addTokenToBoard(newToken);
-      toggleCustomPanel(false);
+      addTokenToBoard(newToken); toggleCustomPanel(false);
     }
-
-    document.getElementById("name").value = "";
-    document.getElementById("image").value = "";
-    document.getElementById("name").focus();
+    document.getElementById("name").value = ""; document.getElementById("name").focus();
   });
 
-  // Logic for Next Turn (Extracted for Menu Use)
   function handleNextTurn() {
     tokens.forEach(t => { t.summoning = false; t.tapped = false; });
     const consolidated = [];
-    const getImg = (t) => sessionImages[t.id] || t.imagePath || 'none';
-
     tokens.forEach(t => {
+        const getImg = (token) => sessionImages[token.id] || token.imagePath || 'none';
         const key = `${t.name}|${t.color}|${t.power}|${t.toughness}|${t.counters}|${t.haste}|${t.summoning}|${t.tapped}|${getImg(t)}`;
         const existing = consolidated.find(c => c.key === key);
         if (existing) {
             existing.token.qty += t.qty;
             if(sessionImages[t.id] && existing.token.id !== t.id) delete sessionImages[t.id];
-        } else {
-            consolidated.push({ key, token: t });
-        }
+        } else { consolidated.push({ key, token: t }); }
     });
     tokens = consolidated.map(c => c.token);
-    save();
-    render();
+    save(); render();
   }
 
-  document.getElementById("presetSearch").addEventListener("input", (e) => {
-    const term = e.target.value.toLowerCase();
-    Array.from(document.getElementById("presetPicker").children).forEach(child => {
-      child.style.display = child.innerText.toLowerCase().includes(term) ? "flex" : "none";
-    });
-  });
-
-  // --- PRESETS ---
-  const PRESETS = {
-    angel:        { name: "Angel",        color: "white",     power: 4, toughness: 4 },
-    bat:          { name: "Bat",          color: "black",     power: 1, toughness: 1 },
-    beast:        { name: "Beast",        color: "green",     power: 3, toughness: 3 },
-    bird:         { name: "Bird",         color: "blue",      power: 1, toughness: 1 },
-    cat:          { name: "Cat",          color: "white",     power: 2, toughness: 2 },
-    clue:         { name: "Clue",         color: "colorless", power: 0, toughness: 0 },
-    construct:    { name: "Construct",    color: "colorless", power: 0, toughness: 0 },
-    devil:        { name: "Devil",        color: "red",       power: 1, toughness: 1 },
-    demon:        { name: "Demon",        color: "black",     power: 5, toughness: 5 },
-    drake:        { name: "Drake",        color: "blue",      power: 2, toughness: 2 },
-    dragon:       { name: "Dragon",       color: "red",       power: 4, toughness: 4 },
-    dwarf:        { name: "Dwarf",        color: "red",       power: 2, toughness: 1 },
-    eldrazi_scion:{ name: "Eldrazi Scion",color: "colorless", power: 1, toughness: 1 },
-    eldrazi_spawn:{ name: "Eldrazi Spawn",color: "colorless", power: 0, toughness: 1 },
-    elf_warrior:  { name: "Elf Warrior",  color: "green",     power: 1, toughness: 1 },
-    faerie:       { name: "Faerie",       color: "blue",      power: 1, toughness: 1 },
-    fish:         { name: "Fish",         color: "blue",      power: 1, toughness: 1 },
-    food:         { name: "Food",         color: "colorless", power: 0, toughness: 0 },
-    goblin:       { name: "Goblin",       color: "red",       power: 1, toughness: 1 },
-    golem:        { name: "Golem",        color: "colorless", power: 3, toughness: 3 },
-    horror:       { name: "Horror",       color: "black",     power: 3, toughness: 3 },
-    human:        { name: "Human",        color: "white",     power: 1, toughness: 1 },
-    illusion:     { name: "Illusion",     color: "blue",      power: 2, toughness: 2 },
-    insect:       { name: "Insect",       color: "green",     power: 1, toughness: 1 },
-    knight:       { name: "Knight",       color: "white",     power: 2, toughness: 2 },
-    kraken:       { name: "Kraken",       color: "blue",      power: 9, toughness: 9 },
-    myr:          { name: "Myr",          color: "colorless", power: 1, toughness: 1 },
-    pegasus:      { name: "Pegasus",      color: "white",     power: 1, toughness: 1 },
-    plant:        { name: "Plant",        color: "green",     power: 0, toughness: 1 },
-    rat:          { name: "Rat",          color: "black",     power: 1, toughness: 1 },
-    saproling:    { name: "Saproling",    color: "green",     power: 1, toughness: 1 },
-    servo:        { name: "Servo",        color: "colorless", power: 1, toughness: 1 },
-    skeleton:     { name: "Skeleton",     color: "black",     power: 1, toughness: 1 },
-    soldier:      { name: "Soldier",      color: "white",     power: 1, toughness: 1 },
-    spirit:       { name: "Spirit",       color: "white",     power: 1, toughness: 1 },
-    spirit_blue:  { name: "Spirit (U)",   color: "blue",      power: 1, toughness: 1 },
-    thopter:      { name: "Thopter",      color: "blue",      power: 1, toughness: 1 },
-    treasure:     { name: "Treasure",     color: "colorless", power: 0, toughness: 0 },
-    warrior:      { name: "Warrior",      color: "red",       power: 1, toughness: 1 },
-    wolf:         { name: "Wolf",         color: "green",     power: 2, toughness: 2 },
-    zombie:       { name: "Zombie",       color: "black",     power: 2, toughness: 2 },
-    zombie_army:  { name: "Zombie Army",  color: "black",     power: 0, toughness: 0 }
-  };
-
-  const presetPicker = document.getElementById("presetPicker");
+  // --- PRESET RENDERER ---
   function getColorCode(c) {
-    const map = { white: '#fffacd', blue: '#69c5ff', black: '#a9a9a9', red: '#ff6b6b', green: '#90ee90', colorless: '#d3d3d3' };
+    const map = { white: '#fffacd', blue: '#69c5ff', black: '#a9a9a9', red: '#ff6b6b', green: '#90ee90', colorless: '#d3d3d3', gold: '#d4af37' };
     return map[c] || '#fff';
   }
 
-  Object.keys(PRESETS).sort().forEach(key => {
-    const p = PRESETS[key];
-    const item = document.createElement("div");
-    item.className = "preset-item";
-    item.innerHTML = `<div style="width:10px; height:10px; border-radius:50%; background:${getColorCode(p.color)}; border:1px solid #555;"></div> <b>${p.name}</b> <span style="color:#888; margin-left:auto; font-size:10px;">${p.power}/${p.toughness}</span>`;
+  function renderPresets(filterText = "") {
+      const picker = document.getElementById("presetPicker");
+      picker.innerHTML = "";
 
-    item.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        showPresetContextMenu(e.clientX, e.clientY, p);
-    });
+      let keys = [];
+      const term = filterText.toLowerCase().trim();
 
-    let timer = null;
-    let isLongPress = false;
+      if (!term) {
+          if (suggestedTokens.length > 0) {
+              picker.style.display = "grid";
+              keys = suggestedTokens;
+          } else {
+              picker.style.display = "block";
+              picker.innerHTML = `<div style="color:#666; font-size:14px; font-style:italic; padding:20px; text-align:center;">Start typing to find tokens...</div>`;
+              return;
+          }
+      } else {
+          picker.style.display = "grid";
+          keys = Object.keys(activePresets).sort().filter(key => activePresets[key].name.toLowerCase().includes(term));
+      }
 
-    item.addEventListener("touchstart", (e) => {
-        isLongPress = false;
-        timer = setTimeout(() => {
-            isLongPress = true;
-            const touch = e.touches[0];
-            showPresetContextMenu(touch.clientX, touch.clientY, p);
-        }, 500);
-    }, {passive: true});
+      if (keys.length === 0) {
+           picker.style.display = "block";
+           picker.innerHTML = `<div style="color:#666; font-size:14px; padding:20px; text-align:center;">No tokens found.</div>`;
+           return;
+      }
 
-    item.addEventListener("touchend", (e) => {
-        clearTimeout(timer);
-        if (isLongPress) e.preventDefault();
-    });
+      keys.forEach(key => {
+        const p = activePresets[key];
+        const item = document.createElement("div");
+        item.className = "preset-item";
+        item.innerHTML = `<div style="width:12px; height:12px; border-radius:50%; background:${getColorCode(p.color)}; border:1px solid #555;"></div> <b>${p.name}</b> <span style="color:#888; margin-left:auto; font-size:12px;">${p.power}/${p.toughness}</span>`;
 
-    item.addEventListener("touchmove", () => clearTimeout(timer));
+        let timer = null, isLongPress = false;
+        item.addEventListener("touchstart", (e) => {
+            isLongPress = false; timer = setTimeout(() => { isLongPress = true; showPresetContextMenu(e.touches[0].clientX, e.touches[0].clientY, p); }, 500);
+        }, {passive: true});
+        item.addEventListener("touchend", (e) => { clearTimeout(timer); if(isLongPress) e.preventDefault(); });
+        item.addEventListener("contextmenu", (e) => { e.preventDefault(); showPresetContextMenu(e.clientX, e.clientY, p); });
 
-    // Left Click: Fill form & Open Custom Panel
-    item.onclick = (e) => {
-      if (isLongPress) return;
+        item.onclick = () => {
+          if (isLongPress) return;
+          addTokenToBoard({
+            id:crypto.randomUUID(), name:p.name, qty:1, color:p.color, power:p.power, toughness:p.toughness,
+            haste:false, summoning:true, tapped:false, counters:0,
+            imagePath: p.imagePath || `${p.name}.png`, scryfallUrl: p.scryfallUrl
+          });
+        };
+        picker.appendChild(item);
+      });
+  }
 
-      document.getElementById("name").value = p.name;
-      document.getElementById("color").value = p.color;
-      document.getElementById("power").value = p.power;
-      document.getElementById("toughness").value = p.toughness;
-      selectedPresetImage = `${p.name}.png`;
+  function toggleCustomPanel(state) {
+      const content = document.getElementById("customContent");
+      const arrow = document.getElementById("customArrow");
+      if(state === false) { content.style.display="none"; arrow.innerText="▶"; }
+      else if(state === true) { content.style.display="block"; arrow.innerText="▼"; }
+      else {
+          const isClosed = window.getComputedStyle(content).display === "none";
+          content.style.display = isClosed ? "block" : "none";
+          arrow.innerText = isClosed ? "▼" : "▶";
+      }
+  }
+  document.getElementById("customHeader").onclick = () => toggleCustomPanel();
+  document.getElementById("presetSearch").addEventListener("input", (e) => { renderPresets(e.target.value); });
 
-      const qtyBox = document.getElementById("qty");
-      toggleCustomPanel(true); // Force open the accordion
-      qtyBox.focus();
-      qtyBox.select();
-    };
-
-    presetPicker.appendChild(item);
-  });
-
+  renderPresets("");
   render();
 </script>
 </body>
