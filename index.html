@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Commander Token Board</title>
+
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="TokenBoard">
@@ -131,12 +132,14 @@
     .token-art-layer {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background-size: cover; background-position: center; background-repeat: no-repeat;
-        z-index: 2; border-radius: 4px;
+        z-index: 2; /* Sits on TOP of text */
+        border-radius: 4px;
     }
     .token-text-layer {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; align-items: center; justify-content: center;
-        z-index: 1; font-size: 40px; color: rgba(255,255,255,0.2); font-weight: 800;
+        z-index: 1; /* Sits BEHIND art */
+        font-size: 40px; color: rgba(255,255,255,0.2); font-weight: 800;
     }
 
     .token-details { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; height: 28px; }
@@ -206,7 +209,7 @@
 <body>
 
 <header>
-  <h1>Commander Tokens <span class="version-tag">v4.6</span></h1>
+  <h1>Commander Tokens <span class="version-tag">v4.7</span></h1>
   <button id="menuBtn">☰</button>
 </header>
 
@@ -504,26 +507,19 @@
       card.className = `token ${t.tapped ? 'tapped' : ''}`;
       card.dataset.color = t.color;
 
-      // --- DOUBLE TAP LOGIC ---
-      let clickTimer = null;
-      let lastClickTime = 0;
+      // --- DOUBLE TAP LOGIC (COUNTER BASED) ---
+      let tapCount = 0;
+      let tapTimer = null;
 
       card.addEventListener("click", (e) => {
         if(e.target.tagName === "BUTTON") return;
 
-        const currentTime = new Date().getTime();
-        const timeDiff = currentTime - lastClickTime;
+        tapCount++;
 
-        if (timeDiff < 300 && timeDiff > 0) {
-            // DOUBLE TAP -> Context Menu
-            clearTimeout(clickTimer);
-            clickTimer = null;
-            lastClickTime = 0;
-            showTokenContextMenu({ clientX: e.clientX, clientY: e.clientY }, t, index);
-        } else {
-            // SINGLE TAP -> Tap/Untap
-            lastClickTime = currentTime;
-            clickTimer = setTimeout(() => {
+        if (tapCount === 1) {
+            tapTimer = setTimeout(() => {
+                // Single Tap Action (Tap/Untap)
+                tapCount = 0;
                 if (t.summoning && !t.tapped) {
                     card.classList.add("shake"); setTimeout(() => card.classList.remove("shake"), 300);
                     return;
@@ -539,8 +535,12 @@
                     return;
                 }
                 save(); render();
-                clickTimer = null;
-            }, 250);
+            }, 280);
+        } else {
+            // Double Tap Action (Context Menu)
+            clearTimeout(tapTimer);
+            tapCount = 0;
+            showTokenContextMenu({ clientX: e.clientX, clientY: e.clientY }, t, index);
         }
       });
 
@@ -731,7 +731,7 @@
       tapped: false, counters: 0, keywords: [],
       // SAFETY: ensure imagePath is string
       imagePath: (selectedPreset && selectedPreset.imagePath) ? selectedPreset.imagePath : null,
-      scryfallUrl: (selectedPreset && selectedPreset.scryfallUrl) ? selectedPreset.scryfallUrl : null,
+      scryfallUrl: null,
       isCardCopy: isCardCopy
     };
 
