@@ -1,72 +1,129 @@
-Commander Token Board - User Guide
-This is a lightweight, interactive dashboard designed to help Magic: The Gathering players manage complex board states, specifically focusing on creature tokens. It runs entirely in your browser and saves your progress automatically.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commander Token Board - User Guide</title>
+  <style>
+    :root {
+      --bg-dark: #111;
+      --bg-panel: #181818;
+      --text-main: #eee;
+      --text-muted: #aaa;
+      --border: #333;
+      --accent: #2f7d32;
+    }
 
-1. Adding Tokens
-There are three ways to add tokens to the battlefield:
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
 
-Quick Add (Presets): Browse the sidebar list for common token types (Angels, Goblins, Treasures, etc.).
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--bg-panel);
+      padding: 30px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
 
-Left-Click: Pre-fills the "Custom Token" form with that creature's stats so you can tweak them before adding.
+    h1 {
+      color: #fff;
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 10px;
+      margin-top: 0;
+    }
 
-Right-Click (or Long Press on Mobile): Instantly spawns that token to the board using default stats.
+    h2 {
+      color: var(--accent);
+      margin-top: 30px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 5px;
+    }
 
-Custom Creation: Open the "Custom Token" accordion menu to manually input Name, Quantity, Color, Power/Toughness, and Haste status.
+    h3 {
+      color: #fff;
+      margin-bottom: 5px;
+    }
 
-Cloning: Click the "Clone" button on any existing token on the battlefield to create an exact copy (the copy enters with Summoning Sickness unless it has Haste).
+    p { margin-bottom: 15px; }
 
-2. Managing the Battlefield
-The board uses "Smart Stacking" to keep your screen clean. Identical tokens are grouped into single stacks.
+    ul, ol {
+      margin-bottom: 20px;
+      padding-left: 20px;
+    }
 
-Tapping & Untapping
-Tap One: Click any token stack to tap one creature.
+    li { margin-bottom: 8px; }
 
-If you have a stack of 5 Goblins and click it, 1 will tap (moving to a new stack) and 4 will remain untapped.
+    code {
+      background: #333;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
 
-If the stack size is 1, it simply toggles between tapped and untapped.
+    /* Table Styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background: #222;
+      border-radius: 8px;
+      overflow: hidden;
+    }
 
-Tap X: Right-click (or Long Press) a stack and select "Tap Specific Amount" to move a precise number of tokens at once.
+    th, td {
+      text-align: left;
+      padding: 12px 15px;
+      border-bottom: 1px solid var(--border);
+    }
 
-Summoning Sickness
-Tokens created without "Haste" appear with a "ZZZ" badge.
+    th {
+      background-color: #2a2a2a;
+      color: var(--accent);
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 0.85em;
+      letter-spacing: 1px;
+    }
 
-Safety Lock: If you attempt to tap a summoning sick creature, it will shake visually and refuse to tap.
+    tr:last-child td { border-bottom: none; }
 
-Override: You can force-tap a sick creature by using the Right-Click menu.
+    /* Icons and Badges */
+    .icon { font-weight: bold; font-size: 1.2em; display: inline-block; vertical-align: middle; }
+    
+    .badge-zzz {
+      background: rgba(180,180,0,0.2);
+      border: 1px solid yellow;
+      color: #ff9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      font-weight: bold;
+    }
 
-Modifying Tokens
-+1/+1 & -1/-1: Use the buttons on the card to add counters. This updates the calculated Power/Toughness displayed on the badge.
+    /* Mobile optimization */
+    @media (max-width: 600px) {
+      .container { padding: 15px; }
+      h1 { font-size: 1.5em; }
+    }
+  </style>
+</head>
+<body>
 
-Removal:
+<div class="container">
 
-Right-Click > Destroy 1: Removes a single token from the stack (simulating combat death or sacrifice).
+  <h1>Commander Token Board Guide</h1>
+  <p><strong>Commander Token Board</strong> is a lightweight, mobile-optimized web application designed to help Magic: The Gathering players manage complex board states without needing physical cards or dice.</p>
 
-Right-Click > Delete Stack: Removes the entire card from the board.
-
-3. Game Phase Controls
-Located in the top header:
-
-Untap / Next Turn:
-
-Untaps all permanents.
-
-Removes Summoning Sickness ("ZZZ") from all creatures.
-
-Auto-Merge: cleans up the board by combining identical separate stacks into single piles.
-
-Reset: Wipes the entire board clean.
-
-Hide/Show Menu: Toggles the sidebar on or off. Use "Hide" to maximize the battlefield view for mobile devices or small tables.
-
-4. Image System
-The app determines which image to show based on the following priority:
-
-User Upload: If you upload an image via the Custom Token form, that specific image will be used for that session.
-
-Local Match: If no image is uploaded, the app looks for a local file in the same folder matching the token's name (e.g., a token named "Angel" looks for Angel.png).
-
-Fallback: If neither is found, the token displays a colored background and the first letter of its name.
-
-5. Mobile & Desktop Controls
-Desktop: Use Right-Click to access the context menus for Quick Create and Token Options.
-
-Mobile/Tablet: Use Long Press (Tap & Hold) to access the same context menus. The app detects scrolling vs. holding to prevent accidental clicks.
+  <h2>📱 Installation (iOS & Android)</h2>
+  <p>For the best experience, install this app to your home screen. This removes the browser address bar and runs the app in full-screen mode.</p>
+  <ol>
+    <li>Open the website
