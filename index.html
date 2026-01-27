@@ -78,6 +78,24 @@
     .accordion-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
     #customContent { margin-top: 16px; display: none; }
 
+    /* SPLASH SCREEN */
+    #splash-overlay {
+        display: none; /* Hidden by default, JS enables it */
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.92); z-index: 6000;
+        align-items: center; justify-content: center;
+        padding: 20px; box-sizing: border-box; backdrop-filter: blur(8px);
+    }
+    .splash-content {
+        background: #222; border: 1px solid #444; border-radius: 16px;
+        padding: 30px; text-align: center; max-width: 400px; width: 100%;
+        box-shadow: 0 20px 50px rgba(0,0,0,1);
+        animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .splash-content h2 { color: var(--accent); margin-top: 0; font-size: 24px; }
+    .splash-content p { color: #ccc; line-height: 1.6; font-size: 16px; margin-bottom: 25px; }
+    .splash-icon { font-size: 40px; margin-bottom: 10px; display: block; }
+
     .modal-overlay {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.85); z-index: 5000; align-items: center; justify-content: center;
@@ -111,8 +129,7 @@
       flex: 1; background: rgba(0,0,0,0.3); border-radius: 6px; overflow: hidden; margin-bottom: 8px;
       display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.1);
     }
-
-    /* THE NEW LAYERS */
+    /* LAYERS */
     .token-art-layer {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background-size: cover; background-position: center; background-repeat: no-repeat;
@@ -193,7 +210,7 @@
 <body>
 
 <header>
-  <h1>Commander Tokens <span class="version-tag">v4.4</span></h1>
+  <h1>Commander Tokens <span class="version-tag">v4.5</span></h1>
   <button id="menuBtn">☰</button>
 </header>
 
@@ -205,6 +222,16 @@
     <div class="menu-item" id="menuToggleSidebar">Hide Sidebar</div>
     <div class="menu-item" id="menuNextTurn">Untap / Next Turn</div>
     <div class="menu-item" style="color:#ff6b6b;" id="menuReset">Reset Board</div>
+</div>
+
+<div id="splash-overlay">
+    <div class="splash-content">
+        <span class="splash-icon">🃏</span>
+        <h2>Streamline Your Board</h2>
+        <p>Want <b>just the tokens</b> for your specific deck?</p>
+        <p>Open the <b>Menu (☰)</b> and select <b style="color:var(--accent)">+ Add Deck</b> to import your decklist automatically!</p>
+        <button id="splash-dismiss" class="btn-green">Got it!</button>
+    </div>
 </div>
 
 <div class="modal-overlay" id="deckModal">
@@ -288,6 +315,16 @@
   document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock(); });
   requestWakeLock();
 
+  // --- SPLASH SCREEN LOGIC ---
+  const SPLASH_KEY = "tokenboard_splash_v1";
+  if (!localStorage.getItem(SPLASH_KEY)) {
+      document.getElementById("splash-overlay").style.display = "flex";
+  }
+  document.getElementById("splash-dismiss").onclick = () => {
+      document.getElementById("splash-overlay").style.display = "none";
+      localStorage.setItem(SPLASH_KEY, "true");
+  };
+
   const DEFAULT_PRESETS = {
     angel:        { name: "Angel",        color: "white",     power: 4, toughness: 4 },
     beast:        { name: "Beast",        color: "green",     power: 3, toughness: 3 },
@@ -350,9 +387,8 @@
   async function fetchTokenArt(tokenId, tokenName, isCard) {
       if (!tokenName) return;
       const cleanName = tokenName.trim();
-      // Use STRICT search for Real Cards to avoid typos
-      // Use FUZZY search for tokens isn't needed per your request to "not fetch", but "Real Card" MUST fetch.
-      if (!isCard) return; // If it's a token, we don't fetch. Use local or text.
+      // Only fetch if it's a "Real Card". Tokens use local or text.
+      if (!isCard) return;
 
       const query = `!"${encodeURIComponent(cleanName)}"`;
       const searchUrl = `https://api.scryfall.com/cards/search?q=${query}&unique=art`;
@@ -415,13 +451,17 @@
         for(let uri of tokenIds) {
             const tokenResp = await fetch(uri);
             const t = await tokenResp.json();
+
             let color = "colorless";
             if(t.colors && t.colors.length > 0) color = (t.colors.length > 1) ? "gold" : ({ 'W':'white', 'U':'blue', 'B':'black', 'R':'red', 'G':'green' }[t.colors[0]] || "colorless");
+
             const key = t.name.toLowerCase().replace(/\s/g, "_");
             newTokenList[key] = {
                 name: t.name, color: color,
                 power: parseInt(t.power)||0, toughness: parseInt(t.toughness)||1,
-                imagePath: `${t.name}.png`, scryfallUrl: null, frequency: tokenCounts[uri] || 0
+                imagePath: `${t.name}.png`,
+                scryfallUrl: null,
+                frequency: tokenCounts[uri] || 0
             };
         }
         suggestedTokens = Object.keys(newTokenList).sort((a, b) => newTokenList[b].frequency - newTokenList[a].frequency).slice(0, 4);
@@ -676,7 +716,7 @@
       tapped: false, counters: 0, keywords: [],
       // SAFETY: ensure imagePath is string
       imagePath: (selectedPreset && selectedPreset.imagePath) ? selectedPreset.imagePath : null,
-      scryfallUrl: null,
+      scryfallUrl: (selectedPreset && selectedPreset.scryfallUrl) ? selectedPreset.scryfallUrl : null,
       isCardCopy: isCardCopy
     };
 
