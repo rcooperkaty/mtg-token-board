@@ -31,7 +31,7 @@
     <li><strong>Tap the result</strong> (Left Click) to instantly spawn that token.</li>
     <li><strong>Long Press (Right Click)</strong> a result to configure stats/quantity before adding.</li>
   </ul>
-
+Default PresetsThe app comes pre-loaded with 27 of the most common Commander tokens. You can add more by using the "Add Deck" feature.Token NameColorStats (P/T)AngelWhite4/4BeastGreen3/3BirdBlue1/1 (Flying)CatWhite2/2ClueColorless0/0ConstructColorless0/0DemonBlack5/5DragonRed4/4DrakeBlue2/2Elf WarriorGreen1/1FoodColorless0/0GoblinRed1/1GolemColorless3/3HumanWhite1/1InsectGreen1/1KnightWhite2/2MyrColorless1/1PegasusWhite1/1PlantGreen0/1RatBlack1/1SaprolingGreen1/1SoldierWhite1/1SpiritWhite1/1ThopterColorless1/1 (Flying)TreasureColorless0/0WolfGreen2/2ZombieBlack2/2
   <h3>2. Deck Import (Recommended)</h3>
   <p>This scans your decklist and automatically sets up your Quick Add shortcuts with the correct tokens and artwork.</p>
   <ol>
