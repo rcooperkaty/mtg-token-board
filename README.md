@@ -31,7 +31,47 @@
     <li><strong>Tap the result</strong> (Left Click) to instantly spawn that token.</li>
     <li><strong>Long Press (Right Click)</strong> a result to configure stats/quantity before adding.</li>
   </ul>
-Default PresetsThe app comes pre-loaded with 27 of the most common Commander tokens. You can add more by using the "Add Deck" feature.Token NameColorStats (P/T)AngelWhite4/4BeastGreen3/3BirdBlue1/1 (Flying)CatWhite2/2ClueColorless0/0ConstructColorless0/0DemonBlack5/5DragonRed4/4DrakeBlue2/2Elf WarriorGreen1/1FoodColorless0/0GoblinRed1/1GolemColorless3/3HumanWhite1/1InsectGreen1/1KnightWhite2/2MyrColorless1/1PegasusWhite1/1PlantGreen0/1RatBlack1/1SaprolingGreen1/1SoldierWhite1/1SpiritWhite1/1ThopterColorless1/1 (Flying)TreasureColorless0/0WolfGreen2/2ZombieBlack2/2
+<h2>📋 Default Presets</h2>
+<p>The app comes pre-loaded with <strong>27</strong> of the most common Commander tokens. You can add more by using the <strong>"Add Deck"</strong> feature.</p>
+
+<table border="1" style="border-collapse: collapse; width: 100%; text-align: left;">
+  <thead>
+    <tr style="background-color: #333; color: white;">
+      <th style="padding: 8px;">Token Name</th>
+      <th style="padding: 8px;">Color</th>
+      <th style="padding: 8px;">Stats (P/T)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td style="padding: 8px;"><b>Angel</b></td><td style="padding: 8px;">White</td><td style="padding: 8px;">4/4</td></tr>
+    <tr><td style="padding: 8px;"><b>Beast</b></td><td style="padding: 8px;">Green</td><td style="padding: 8px;">3/3</td></tr>
+    <tr><td style="padding: 8px;"><b>Bird</b></td><td style="padding: 8px;">Blue</td><td style="padding: 8px;">1/1</td></tr>
+    <tr><td style="padding: 8px;"><b>Cat</b></td><td style="padding: 8px;">White</td><td style="padding: 8px;">2/2</td></tr>
+    <tr><td style="padding: 8px;"><b>Clue</b></td><td style="padding: 8px;">Colorless</td><td style="padding: 8px;">0/0</td></tr>
+    <tr><td style="padding: 8px;"><b>Construct</b></td><td style="padding: 8px;">Colorless</td><td style="padding: 8px;">0/0</td></tr>
+    <tr><td style="padding: 8px;"><b>Demon</b></td><td style="padding: 8px;">Black</td><td style="padding: 8px;">5/5</td></tr>
+    <tr><td style="padding: 8px;"><b>Dragon</b></td><td style="padding: 8px;">Red</td><td style="padding: 8px;">4/4</td></tr>
+    <tr><td style="padding: 8px;"><b>Drake</b></td><td style="padding: 8px;">Blue</td><td style="padding: 8px;">2/2</td></tr>
+    <tr><td style="padding: 8px;"><b>Elf Warrior</b></td><td style="padding: 8px;">Green</td><td style="padding: 8px;">1/1</td></tr>
+    <tr><td style="padding: 8px;"><b>Food</b></td><td style="padding: 8px;">Colorless</td><td style="padding: 8px;">0/0</td></tr>
+    <tr><td style="padding: 8px;"><b>Goblin</b></td><td style="padding: 8px;">Red</td><td style="padding: 8px;">1/1</td></tr>
+    <tr><td style="padding: 8px;"><b>Golem</b></td><td style="padding: 8px;">Colorless</td><td style="padding: 8px;">3/3</td></tr>
+    <tr><td style="padding: 8px;"><b>Human</b></td><td style="padding: 8px;">White</td><td style="padding: 8px;">1/1</td></tr>
+    <tr><td style="padding: 8px;"><b>Insect</b></td><td style="padding: 8px;">Green</td><td style="padding: 8px;">1/1</td></tr>
+    <tr><td style="padding: 8px;"><b>Knight</b></td><td style="padding: 8px;">White</td><td style="padding: 8px;">2/2</td></tr>
+    <tr><td style="padding: 8px;"><b>Myr</b></td><td style="padding: 8px;">Colorless</td><td style="padding: 8px;">1/1</td></tr>
+    <tr><td style="padding: 8px;"><b>Pegasus</b></td><td style="padding: 8px;">White</td><td style="padding: 8px;">1/1</td></tr>
+    <tr><td style="padding: 8px;"><b>Plant</b></td><td style="padding: 8px;">Green</td><td style="padding: 8px;">0/1</td></tr>
+    <tr><td style="padding: 8px;"><b>Rat</b></td><td style="padding: 8px;">Black</td><td style="padding: 8px;">1/1</td></tr>
+    <tr><td style="padding: 8px;"><b>Saproling</b></td><td style="padding: 8px;">Green</td><td style="padding: 8px;">1/1</td></tr>
+    <tr><td style="padding: 8px;"><b>Soldier</b></td><td style="padding: 8px;">White</td><td style="padding: 8px;">1/1</td></tr>
+    <tr><td style="padding: 8px;"><b>Spirit</b></td><td style="padding: 8px;">White</td><td style="padding: 8px;">1/1</td></tr>
+    <tr><td style="padding: 8px;"><b>Thopter</b></td><td style="padding: 8px;">Colorless</td><td style="padding: 8px;">1/1</td></tr>
+    <tr><td style="padding: 8px;"><b>Treasure</b></td><td style="padding: 8px;">Colorless</td><td style="padding: 8px;">0/0</td></tr>
+    <tr><td style="padding: 8px;"><b>Wolf</b></td><td style="padding: 8px;">Green</td><td style="padding: 8px;">2/2</td></tr>
+    <tr><td style="padding: 8px;"><b>Zombie</b></td><td style="padding: 8px;">Black</td><td style="padding: 8px;">2/2</td></tr>
+  </tbody>
+</table>
   <h3>2. Deck Import (Recommended)</h3>
   <p>This scans your decklist and automatically sets up your Quick Add shortcuts with the correct tokens and artwork.</p>
   <ol>
