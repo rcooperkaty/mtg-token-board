@@ -8,26 +8,37 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="TokenBoard">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#111111">
-
-  <style>
+  <meta name="theme-color" content="#181818"> <style>
     :root {
       --bg-dark: #111;
       --bg-panel: #181818;
       --border: #333;
       --accent: #2f7d32;
+      /* Define safe areas for iPhone Notch/Home Bar */
       --safe-top: env(safe-area-inset-top, 20px);
       --safe-bottom: env(safe-area-inset-bottom, 20px);
       --safe-left: env(safe-area-inset-left, 0px);
       --safe-right: env(safe-area-inset-right, 0px);
     }
     * { -webkit-tap-highlight-color: transparent; }
+
     body {
-      margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg-dark); color: #eee; display: flex; flex-direction: column;
-      height: 100vh; overflow: hidden; -webkit-user-select: none; user-select: none;
-      padding-top: var(--safe-top); padding-bottom: var(--safe-bottom);
-      padding-left: var(--safe-left); padding-right: var(--safe-right);
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-dark);
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+
+      /* Remove body padding-top so we can handle it in the header specifically */
+      padding-top: 0;
+      padding-bottom: var(--safe-bottom);
+      padding-left: var(--safe-left);
+      padding-right: var(--safe-right);
     }
 
     /* --- INPUTS & BUTTONS --- */
@@ -43,49 +54,58 @@
     button:active { transform: scale(0.98); }
     .btn-green { background: var(--accent); color: white; width: 100%; font-weight: bold; }
 
-    /* --- FLOATING ACTION BUTTON (NEXT TURN) --- */
-    #fabNextTurn {
-        position: fixed;
-        bottom: calc(20px + var(--safe-bottom));
-        right: calc(20px + var(--safe-right));
-        background: var(--accent);
-        color: white;
-        padding: 14px 24px;
-        border-radius: 50px;
-        font-weight: bold;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-        z-index: 1000;
-        border: 1px solid rgba(255,255,255,0.2);
-        display: none; /* Hidden by default */
-        align-items: center;
-        gap: 8px;
-        font-size: 16px;
-        transition: transform 0.2s, opacity 0.2s;
-    }
-    #fabNextTurn:active { transform: scale(0.95); }
-    #fabNextTurn.visible { display: flex; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-
-    @keyframes popIn {
-        from { opacity: 0; transform: scale(0.5) translateY(20px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    /* --- HEADER --- */
+    /* --- HEADER (FIXED FOR NOTCH) --- */
     header {
-      padding: 10px 16px; background: var(--bg-panel); border-bottom: 1px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
-      z-index: 2000; position: relative; height: 50px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      z-index: 2000;
+      position: relative;
+
+      /* CRITICAL FIX: Push content down below the status bar */
+      padding-top: calc(var(--safe-top) + 10px);
+      padding-bottom: 15px;
+      padding-left: 20px;
+      padding-right: 20px;
+
+      /* Ensure minimum height */
+      min-height: 60px;
     }
-    header h1 { font-size: 20px; margin: 0; font-weight: 700; }
-    #menuBtn { background: transparent; border: 1px solid #444; font-size: 24px; padding: 4px 16px; height: 44px; display: flex; align-items: center; }
+
+    header h1 { font-size: 22px; margin: 0; font-weight: 800; letter-spacing: 0.5px; }
+
+    #menuBtn {
+        background: transparent;
+        border: 1px solid #444;
+        font-size: 24px;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border-radius: 8px;
+    }
 
     /* --- MENU --- */
     #main-menu {
-      display: none; position: absolute; top: 60px; right: 10px; background: #222;
-      border: 1px solid #444; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.9);
-      z-index: 3000; min-width: 220px; overflow: hidden;
+      display: none;
+      position: absolute;
+      /* Push menu down so it doesn't overlap header */
+      top: calc(var(--safe-top) + 65px);
+      right: 10px;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.95);
+      z-index: 3000;
+      min-width: 240px;
+      overflow: hidden;
     }
-    .menu-item { display: block; padding: 16px; color: #eee; text-decoration: none; border-bottom: 1px solid #333; font-size: 16px; cursor: pointer; }
+    .menu-item { display: block; padding: 18px 20px; color: #eee; text-decoration: none; border-bottom: 1px solid #333; font-size: 16px; cursor: pointer; }
     .menu-item:active { background: #333; }
 
     /* --- LAYOUT --- */
@@ -155,6 +175,29 @@
     .pt-badge { bottom: 6px; right: 6px; background: rgba(0,0,0,0.9); border: 1px solid #999; font-size: 16px; color: #fff; }
     .haste-badge { bottom: 6px; left: 6px; background: rgba(200,50,50,0.9); border: 1px solid red; color: #fff; }
     .sick-badge { top: 6px; right: 6px; background: rgba(180,180,0,0.9); border: 1px solid yellow; color: #fff; }
+
+    /* FLOATING ACTION BUTTON */
+    #fabNextTurn {
+        position: fixed;
+        bottom: calc(20px + var(--safe-bottom));
+        right: calc(20px + var(--safe-right));
+        background: var(--accent);
+        color: white;
+        padding: 14px 24px;
+        border-radius: 50px;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        z-index: 1000;
+        border: 1px solid rgba(255,255,255,0.2);
+        display: none;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        transition: transform 0.2s, opacity 0.2s;
+    }
+    #fabNextTurn:active { transform: scale(0.95); }
+    #fabNextTurn.visible { display: flex; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.5) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
     /* Context Menu */
     #context-menu {
