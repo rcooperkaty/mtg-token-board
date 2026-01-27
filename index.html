@@ -8,13 +8,14 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="TokenBoard">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#181818"> <style>
+  <meta name="theme-color" content="#181818">
+
+  <style>
     :root {
       --bg-dark: #111;
       --bg-panel: #181818;
       --border: #333;
       --accent: #2f7d32;
-      /* Define safe areas for iPhone Notch/Home Bar */
       --safe-top: env(safe-area-inset-top, 20px);
       --safe-bottom: env(safe-area-inset-bottom, 20px);
       --safe-left: env(safe-area-inset-left, 0px);
@@ -23,92 +24,47 @@
     * { -webkit-tap-highlight-color: transparent; }
 
     body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg-dark);
-      color: #eee;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-      -webkit-user-select: none;
-      user-select: none;
-
-      /* Remove body padding-top so we can handle it in the header specifically */
-      padding-top: 0;
-      padding-bottom: var(--safe-bottom);
-      padding-left: var(--safe-left);
-      padding-right: var(--safe-right);
+      margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-dark); color: #eee; display: flex; flex-direction: column;
+      height: 100vh; overflow: hidden; -webkit-user-select: none; user-select: none;
+      padding-top: 0; padding-bottom: var(--safe-bottom);
+      padding-left: var(--safe-left); padding-right: var(--safe-right);
     }
 
-    /* --- INPUTS & BUTTONS --- */
     input, select, textarea {
       font-size: 16px !important; padding: 12px; border-radius: 6px;
       border: 1px solid #444; background: #222; color: #eee; width: 100%; box-sizing: border-box; margin-bottom: 10px;
     }
     input:focus, select:focus, textarea:focus { outline: 2px solid #555; border-color: transparent; }
+
     button {
       background: #444; color: #eee; border: none; padding: 12px 16px; border-radius: 6px;
       cursor: pointer; font-size: 16px; font-weight: 500; touch-action: manipulation;
     }
     button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.5; pointer-events: none; }
+
     .btn-green { background: var(--accent); color: white; width: 100%; font-weight: bold; }
 
-    /* --- HEADER (FIXED FOR NOTCH) --- */
     header {
-      background: var(--bg-panel);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-shrink: 0;
-      z-index: 2000;
-      position: relative;
-
-      /* CRITICAL FIX: Push content down below the status bar */
-      padding-top: calc(var(--safe-top) + 10px);
-      padding-bottom: 15px;
-      padding-left: 20px;
-      padding-right: 20px;
-
-      /* Ensure minimum height */
-      min-height: 60px;
+      background: var(--bg-panel); border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+      z-index: 2000; position: relative;
+      padding-top: calc(var(--safe-top) + 10px); padding-bottom: 15px;
+      padding-left: 20px; padding-right: 20px; min-height: 60px;
     }
+    header h1 { font-size: 22px; margin: 0; font-weight: 800; letter-spacing: 0.5px; display: flex; align-items: baseline; gap: 8px; }
+    .version-tag { font-size: 12px; color: #666; font-weight: 400; }
+    #menuBtn { background: transparent; border: 1px solid #444; font-size: 24px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 8px; }
 
-    header h1 { font-size: 22px; margin: 0; font-weight: 800; letter-spacing: 0.5px; }
-
-    #menuBtn {
-        background: transparent;
-        border: 1px solid #444;
-        font-size: 24px;
-        width: 44px;
-        height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        border-radius: 8px;
-    }
-
-    /* --- MENU --- */
     #main-menu {
-      display: none;
-      position: absolute;
-      /* Push menu down so it doesn't overlap header */
-      top: calc(var(--safe-top) + 65px);
-      right: 10px;
-      background: #222;
-      border: 1px solid #444;
-      border-radius: 8px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.95);
-      z-index: 3000;
-      min-width: 240px;
-      overflow: hidden;
+      display: none; position: absolute; top: calc(var(--safe-top) + 65px); right: 10px; background: #222;
+      border: 1px solid #444; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.95);
+      z-index: 3000; min-width: 240px; overflow: hidden;
     }
     .menu-item { display: block; padding: 18px 20px; color: #eee; text-decoration: none; border-bottom: 1px solid #333; font-size: 16px; cursor: pointer; }
     .menu-item:active { background: #333; }
 
-    /* --- LAYOUT --- */
     main { display: flex; flex: 1; overflow: hidden; position: relative; }
     main.maximize .sidebar { display: none !important; }
     .sidebar {
@@ -122,7 +78,6 @@
     .accordion-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
     #customContent { margin-top: 16px; display: none; }
 
-    /* --- MODAL --- */
     .modal-overlay {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.85); z-index: 5000; align-items: center; justify-content: center;
@@ -130,7 +85,6 @@
     }
     .modal { background: #222; padding: 24px; border-radius: 12px; width: 100%; max-width: 500px; border: 1px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
-    /* --- PRESETS --- */
     .preset-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; max-height: 250px; overflow-y: auto; }
     .preset-item {
       display: flex; align-items: center; gap: 10px; padding: 12px; background: #222;
@@ -138,7 +92,6 @@
     }
     .preset-item:active { background: #333; transform: scale(0.98); }
 
-    /* --- TOKENS --- */
     #tokenList { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 16px; padding-bottom: 80px; }
     .token {
       position: relative; aspect-ratio: 5/7; border-radius: 12px; border: 2px solid transparent;
@@ -146,7 +99,6 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.5); touch-action: manipulation;
     }
     .token.tapped { transform: rotate(5deg) translateY(10px); opacity: 0.7; filter: grayscale(0.5); }
-
     .token.shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
     @keyframes shake {
       10%, 90% { transform: translate3d(-2px, 0, 0); }
@@ -159,53 +111,70 @@
       flex: 1; background: rgba(0,0,0,0.3); border-radius: 6px; overflow: hidden; margin-bottom: 8px;
       display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.1);
     }
-    .token-img { width: 100%; height: 100%; object-fit: cover; }
-    .fallback-text { font-size: 40px; color: rgba(255,255,255,0.2); font-weight: 800; }
+
+    /* THE NEW LAYERS */
+    .token-art-layer {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background-size: cover; background-position: center; background-repeat: no-repeat;
+        z-index: 2; /* Sits on TOP of text */
+        border-radius: 4px;
+    }
+    .token-text-layer {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        display: flex; align-items: center; justify-content: center;
+        z-index: 1; /* Sits BEHIND art */
+        font-size: 40px; color: rgba(255,255,255,0.2); font-weight: 800;
+    }
+
     .token-details { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; height: 28px; }
     .token-qty { font-size: 14px; color: #fff; background: rgba(0,0,0,0.7); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); }
-
     .token-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 4px; }
     .token-actions button { padding: 8px 0; font-size: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #ccc; }
     .token-actions button:hover { background: rgba(255,255,255,0.1); }
     .token-actions button.buff { color: #8f8; }
     .token-actions button.nerf { color: #f88; }
 
-    /* Badges */
-    .badge { position: absolute; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+    .badge { position: absolute; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.8); }
     .pt-badge { bottom: 6px; right: 6px; background: rgba(0,0,0,0.9); border: 1px solid #999; font-size: 16px; color: #fff; }
     .haste-badge { bottom: 6px; left: 6px; background: rgba(200,50,50,0.9); border: 1px solid red; color: #fff; }
     .sick-badge { top: 6px; right: 6px; background: rgba(180,180,0,0.9); border: 1px solid yellow; color: #fff; }
 
-    /* FLOATING ACTION BUTTON */
+    .keyword-badge {
+        top: 6px; left: 6px;
+        background: rgba(0,0,0,0.85); border: 1px solid #555;
+        color: #adf; padding: 2px 4px; font-size: 9px;
+        display: flex; flex-direction: column; gap: 2px;
+        align-items: flex-start;
+        box-shadow: none; border-radius: 4px;
+        max-height: 80%; overflow: hidden;
+    }
+
     #fabNextTurn {
-        position: fixed;
-        bottom: calc(20px + var(--safe-bottom));
-        right: calc(20px + var(--safe-right));
-        background: var(--accent);
-        color: white;
-        padding: 14px 24px;
-        border-radius: 50px;
-        font-weight: bold;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-        z-index: 1000;
-        border: 1px solid rgba(255,255,255,0.2);
-        display: none;
-        align-items: center;
-        gap: 8px;
-        font-size: 16px;
-        transition: transform 0.2s, opacity 0.2s;
+        position: fixed; bottom: calc(20px + var(--safe-bottom)); right: calc(20px + var(--safe-right));
+        background: var(--accent); color: white; padding: 14px 24px; border-radius: 50px; font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.6); z-index: 1000; border: 1px solid rgba(255,255,255,0.2);
+        display: none; align-items: center; gap: 8px; font-size: 16px; transition: transform 0.2s, opacity 0.2s;
     }
     #fabNextTurn:active { transform: scale(0.95); }
     #fabNextTurn.visible { display: flex; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     @keyframes popIn { from { opacity: 0; transform: scale(0.5) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-    /* Context Menu */
+    #toast {
+        position: fixed; bottom: calc(30px + var(--safe-bottom)); left: 50%; transform: translateX(-50%);
+        background: #333; color: white; padding: 12px 24px; border-radius: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.8); z-index: 5000;
+        display: flex; gap: 15px; align-items: center;
+        opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        border: 1px solid #555;
+    }
+    #toast.show { opacity: 1; pointer-events: auto; }
+    #toast button { background: transparent; border: 1px solid #777; padding: 4px 12px; font-size: 12px; margin: 0; }
+
     #context-menu {
       position: absolute; display: none; background: #222; border: 1px solid #555;
       border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 4000; min-width: 200px;
     }
 
-    /* Colors */
     .token[data-color="white"] { background: #545450; border-color: #a8a8a0; }
     .token[data-color="blue"] { background: #1d3a5e; border-color: #4a86c0; }
     .token[data-color="black"] { background: #2e2e2e; border-color: #5e5e5e; }
@@ -224,7 +193,7 @@
 <body>
 
 <header>
-  <h1>Commander Tokens</h1>
+  <h1>Commander Tokens <span class="version-tag">v4.4</span></h1>
   <button id="menuBtn">☰</button>
 </header>
 
@@ -241,7 +210,7 @@
 <div class="modal-overlay" id="deckModal">
     <div class="modal">
         <h2 style="color:#eee; margin-top:0;">Import Deck</h2>
-        <p style="font-size:14px; color:#aaa; margin-bottom:12px; line-height:1.4;">Paste your decklist. We will prioritize local art, then fallback to Scryfall.</p>
+        <p style="font-size:14px; color:#aaa; margin-bottom:12px; line-height:1.4;">Paste your decklist. We will parse it for Token Names and Stats only.</p>
         <textarea id="deckInput" placeholder="1 Sol Ring&#10;1 Rhys the Redeemed&#10;..."></textarea>
         <div id="importStatus" style="font-size:13px; color:#888; font-style:italic; margin-bottom:10px;"></div>
         <div style="display:flex; gap:10px; justify-content:flex-end;">
@@ -249,6 +218,11 @@
             <button onclick="processDeckImport()" class="btn-green" style="width:auto;">Import</button>
         </div>
     </div>
+</div>
+
+<div id="toast">
+    <span id="toastMsg">Action</span>
+    <button id="toastUndo">UNDO</button>
 </div>
 
 <main>
@@ -284,10 +258,17 @@
               <input type="number" id="toughness" value="1" placeholder="Tgh" style="flex:1" />
             </div>
             <input type="file" id="image" accept="image/*" style="padding:10px; font-size:14px;" />
-            <label style="font-size:16px; display:flex; align-items:center; gap:10px; margin-bottom:16px; cursor:pointer">
-              <input type="checkbox" id="haste" style="width:24px; height:24px; margin:0;"> Creature has Haste
-            </label>
-            <button type="submit" class="btn-green">Create Token</button>
+
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
+                <label style="font-size:16px; display:flex; align-items:center; gap:10px; cursor:pointer">
+                  <input type="checkbox" id="haste" style="width:24px; height:24px; margin:0;"> Creature has Haste
+                </label>
+                <label style="font-size:16px; display:flex; align-items:center; gap:10px; cursor:pointer; color:#8df;">
+                  <input type="checkbox" id="isCardCopy" style="width:24px; height:24px; margin:0;"> Search Real Card?
+                </label>
+            </div>
+
+            <button type="submit" class="btn-green" id="createBtn">Create Token</button>
           </form>
       </div>
     </div>
@@ -302,7 +283,11 @@
 <div id="context-menu"></div>
 
 <script>
-  // --- DEFAULT PRESETS ---
+  let wakeLock = null;
+  async function requestWakeLock() { if ('wakeLock' in navigator) try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e){} }
+  document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock(); });
+  requestWakeLock();
+
   const DEFAULT_PRESETS = {
     angel:        { name: "Angel",        color: "white",     power: 4, toughness: 4 },
     beast:        { name: "Beast",        color: "green",     power: 3, toughness: 3 },
@@ -335,8 +320,8 @@
 
   let activePresets = { ...DEFAULT_PRESETS };
   let suggestedTokens = [];
+  let editingTokenId = null;
 
-  // --- UI LOGIC ---
   const menuBtn = document.getElementById("menuBtn");
   const mainMenu = document.getElementById("main-menu");
   menuBtn.onclick = (e) => { e.stopPropagation(); mainMenu.style.display = mainMenu.style.display === "block" ? "none" : "block"; };
@@ -349,7 +334,51 @@
   document.getElementById("menuAddDeck").onclick = () => { document.getElementById("deckModal").style.display = "flex"; document.getElementById("deckInput").focus(); mainMenu.style.display = "none"; };
   function closeDeckModal() { document.getElementById("deckModal").style.display = "none"; document.getElementById("importStatus").innerText = ""; }
 
-  // --- DECK IMPORT (PRIORITIZE LOCAL + COUNT FREQUENCY) ---
+  let lastDeletedState = null;
+  function showToast(msg, undoCallback) {
+      const t = document.getElementById("toast");
+      const msgEl = document.getElementById("toastMsg");
+      const btn = document.getElementById("toastUndo");
+      msgEl.innerText = msg;
+      t.classList.add("show");
+      if (undoCallback) { btn.style.display = 'block'; btn.onclick = () => { undoCallback(); t.classList.remove("show"); }; }
+      else { btn.style.display = 'none'; }
+      setTimeout(() => { t.classList.remove("show"); }, 4000);
+  }
+
+  // --- AUTO-FETCHER (Strict Search) ---
+  async function fetchTokenArt(tokenId, tokenName, isCard) {
+      if (!tokenName) return;
+      const cleanName = tokenName.trim();
+      // Use STRICT search for Real Cards to avoid typos
+      // Use FUZZY search for tokens isn't needed per your request to "not fetch", but "Real Card" MUST fetch.
+      if (!isCard) return; // If it's a token, we don't fetch. Use local or text.
+
+      const query = `!"${encodeURIComponent(cleanName)}"`;
+      const searchUrl = `https://api.scryfall.com/cards/search?q=${query}&unique=art`;
+
+      try {
+          const resp = await fetch(searchUrl);
+          const data = await resp.json();
+          if (data.data && data.data.length > 0) {
+              const card = data.data[0];
+              let newUrl = null;
+              if (card.image_uris && card.image_uris.art_crop) newUrl = card.image_uris.art_crop;
+              else if (card.card_faces && card.card_faces[0].image_uris) newUrl = card.card_faces[0].image_uris.art_crop;
+
+              if (newUrl) {
+                  const target = tokens.find(t => t.id === tokenId);
+                  if (target) {
+                      target.scryfallUrl = newUrl;
+                      save(); render();
+                  }
+              }
+          } else {
+              showToast(`Card not found: "${cleanName}"`, null);
+          }
+      } catch (e) { console.log("Fetch failed"); }
+  }
+
   async function processDeckImport() {
     const rawText = document.getElementById("deckInput").value;
     const statusEl = document.getElementById("importStatus");
@@ -359,11 +388,7 @@
     const cardNames = lines.map(line => line.replace(/^\d+x?\s+/, "").split("(")[0].trim()).filter(n => n.length > 0);
 
     statusEl.innerText = `Fetching ${cardNames.length} cards...`;
-
-    // Use Map to count how many cards produce a specific token URI
-    const tokenCounts = {}; // Key: URI, Value: Count
-    const tokenIds = new Set(); // Unique URIs to fetch
-    const batches = [];
+    const tokenCounts = {}; const tokenIds = new Set(); const batches = [];
     while(cardNames.length > 0) batches.push(cardNames.splice(0, 75));
 
     try {
@@ -384,48 +409,29 @@
                 }
             });
         }
-
         if(tokenIds.size === 0) { statusEl.innerText = "No tokens found."; return; }
-
         statusEl.innerText = `Loading ${tokenIds.size} tokens...`;
         const newTokenList = {};
-
         for(let uri of tokenIds) {
             const tokenResp = await fetch(uri);
             const t = await tokenResp.json();
-
-            let scryfallUrl = null;
-            if (t.image_uris && t.image_uris.art_crop) scryfallUrl = t.image_uris.art_crop;
-            else if (t.card_faces && t.card_faces[0].image_uris) scryfallUrl = t.card_faces[0].image_uris.art_crop;
-
             let color = "colorless";
             if(t.colors && t.colors.length > 0) color = (t.colors.length > 1) ? "gold" : ({ 'W':'white', 'U':'blue', 'B':'black', 'R':'red', 'G':'green' }[t.colors[0]] || "colorless");
-
             const key = t.name.toLowerCase().replace(/\s/g, "_");
-
-            // Store count in the object temporarily for sorting
             newTokenList[key] = {
                 name: t.name, color: color,
                 power: parseInt(t.power)||0, toughness: parseInt(t.toughness)||1,
-                imagePath: `${t.name}.png`, scryfallUrl: scryfallUrl,
-                frequency: tokenCounts[uri] || 0
+                imagePath: `${t.name}.png`, scryfallUrl: null, frequency: tokenCounts[uri] || 0
             };
         }
-
-        // Determine Top 4
-        suggestedTokens = Object.keys(newTokenList)
-            .sort((a, b) => newTokenList[b].frequency - newTokenList[a].frequency)
-            .slice(0, 4);
-
+        suggestedTokens = Object.keys(newTokenList).sort((a, b) => newTokenList[b].frequency - newTokenList[a].frequency).slice(0, 4);
         activePresets = newTokenList;
-        renderPresets(""); // Render with empty filter (triggering suggestions)
+        renderPresets("");
         closeDeckModal();
-        alert("Deck Imported! Top tokens added to Quick List.");
-
+        alert("Deck Imported!");
     } catch (err) { console.error(err); statusEl.innerText = "Error: " + err.message; }
   }
 
-  // --- APP STATE ---
   let tokens = [];
   let sessionImages = {};
   let selectedPreset = null;
@@ -434,26 +440,26 @@
 
   function addTokenToBoard(newToken) {
     const getImg = (t) => sessionImages[t.id] || t.imagePath || 'none';
-    const sig = (t) => `${t.name}|${t.color}|${t.power}|${t.toughness}|${t.counters}|${t.haste}|${t.summoning}|${t.tapped}|${getImg(t)}`;
+    const kw = (t) => (t.keywords || []).sort().join(",");
+    const sig = (t) => `${t.name}|${t.color}|${t.power}|${t.toughness}|${t.counters}|${t.haste}|${t.summoning}|${t.tapped}|${getImg(t)}|${kw(t)}`;
     const match = tokens.find(t => sig(t) === sig(newToken));
 
     if (match) {
       match.qty += newToken.qty;
     } else {
       tokens.push(newToken);
+      if (newToken.isCardCopy) { fetchTokenArt(newToken.id, newToken.name, true); }
     }
     save(); render();
   }
 
   function save() { localStorage.setItem("mtg_tokens", JSON.stringify(tokens)); }
 
-  // --- RENDER BOARD ---
   function render() {
     const list = document.getElementById("tokenList");
     const fab = document.getElementById("fabNextTurn");
     list.innerHTML = "";
 
-    // Toggle FAB Visibility based on token count
     if (tokens.length > 0) fab.classList.add("visible");
     else fab.classList.remove("visible");
 
@@ -488,27 +494,47 @@
       const imgContainer = document.createElement("div");
       imgContainer.className = "token-img-container";
 
-      const img = document.createElement("img");
-      img.className = "token-img";
+      // 1. BACKGROUND TEXT LAYER (Always present)
+      const textLayer = document.createElement("div");
+      textLayer.className = "token-text-layer";
+      textLayer.innerText = t.name[0];
+      imgContainer.appendChild(textLayer);
 
-      if(sessionImages[t.id]) {
-          img.src = sessionImages[t.id];
+      // 2. BACKGROUND IMAGE LAYER (Sits on top)
+      const artLayer = document.createElement("div");
+      artLayer.className = "token-art-layer";
+
+      // Determine Image Source
+      let imgUrl = "";
+      if (sessionImages[t.id]) {
+          imgUrl = sessionImages[t.id]; // User Upload
+      } else if (t.isCardCopy && t.scryfallUrl) {
+          imgUrl = t.scryfallUrl; // Real Card
       } else {
-          if (t.scryfallUrl) { img.src = t.scryfallUrl; } else { img.src = t.imagePath || `${t.name}.png`; }
-          img.onerror = function() {
-              if (t.scryfallUrl && this.src !== t.scryfallUrl) { this.src = t.scryfallUrl; }
-              else { this.style.display = 'none'; imgContainer.innerHTML += `<div class="fallback-text">${t.name[0]}</div>`; }
-          };
+          // Default to local path.
+          // Note: If this 404s, the browser just renders transparency = text shows through!
+          imgUrl = t.imagePath || `${t.name}.png`;
       }
-      imgContainer.appendChild(img);
+
+      if (imgUrl) {
+          artLayer.style.backgroundImage = `url('${imgUrl}')`;
+      }
+      imgContainer.appendChild(artLayer);
 
       const effPow = t.power + t.counters;
       const effTgh = t.toughness + t.counters;
       imgContainer.innerHTML += `<div class="badge pt-badge">${effPow}/${effTgh}</div>`;
       if (t.summoning) imgContainer.innerHTML += `<div class="badge sick-badge">ZZZ</div>`;
       if (t.haste) imgContainer.innerHTML += `<div class="badge haste-badge">HASTE</div>`;
-      card.appendChild(imgContainer);
 
+      if (t.keywords && t.keywords.length > 0) {
+          const kwBadge = document.createElement("div");
+          kwBadge.className = "badge keyword-badge";
+          t.keywords.forEach(k => { const s = document.createElement("span"); s.innerText = k; kwBadge.appendChild(s); });
+          imgContainer.appendChild(kwBadge);
+      }
+
+      card.appendChild(imgContainer);
       card.innerHTML += `<div class="token-details"><span>${t.name}</span> <span class="token-qty">x${t.qty}</span></div>`;
 
       const actions = document.createElement("div");
@@ -527,15 +553,20 @@
     });
   }
 
-  // Attach Floating Button to Next Turn logic
   document.getElementById("fabNextTurn").onclick = handleNextTurn;
 
-  // --- CONTEXT MENUS ---
   const ctxMenu = document.getElementById("context-menu");
   function showTokenContextMenu(e, token, index) {
     const action = token.tapped ? "Untap" : "Tap";
-    ctxMenu.innerHTML = `<div class="menu-item" id="ctx-tap-x">${action} X...</div><div class="menu-item" style="color:#ff6b6b" id="ctx-kill-1">Destroy 1</div><div class="menu-item" style="color:#ff6b6b" id="ctx-kill-all">Delete Stack</div>`;
+    ctxMenu.innerHTML = `
+      <div class="menu-item" id="ctx-tap-x">${action} X...</div>
+      <div class="menu-item" id="ctx-add-kw">Add Keyword...</div>
+      <div class="menu-item" id="ctx-edit">Edit / Transform...</div>
+      <div class="menu-item" style="color:#ff6b6b" id="ctx-kill-1">Destroy 1</div>
+      <div class="menu-item" style="color:#ff6b6b" id="ctx-kill-all">Delete Stack</div>
+    `;
     positionMenu(e.clientX, e.clientY);
+
     document.getElementById("ctx-tap-x").onclick = () => {
        const input = prompt(`How many?`, token.qty);
        if(input) {
@@ -550,14 +581,43 @@
        }
        ctxMenu.style.display = "none";
     };
-    document.getElementById("ctx-kill-1").onclick = () => { if(token.qty > 1) token.qty--; else { delete sessionImages[token.id]; tokens.splice(index, 1); } save(); render(); ctxMenu.style.display = "none"; };
-    document.getElementById("ctx-kill-all").onclick = () => { if(confirm(`Remove all ${token.name}?`)) { delete sessionImages[token.id]; tokens.splice(index, 1); save(); render(); } ctxMenu.style.display = "none"; };
+
+    document.getElementById("ctx-add-kw").onclick = () => {
+        const kw = prompt("Enter keyword (e.g. Flying, Shield, Trample):");
+        if(kw) { if(!token.keywords) token.keywords = []; token.keywords.push(kw.toUpperCase()); save(); render(); }
+        ctxMenu.style.display = "none";
+    };
+
+    document.getElementById("ctx-edit").onclick = () => {
+        document.getElementById("name").value = token.name;
+        document.getElementById("color").value = token.color;
+        document.getElementById("power").value = token.power;
+        document.getElementById("toughness").value = token.toughness;
+        document.getElementById("haste").checked = token.haste;
+        editingTokenId = token.id;
+        document.getElementById("createBtn").innerText = "Update Token";
+        document.getElementById("customContent").style.display = "block";
+        document.getElementById("customArrow").innerText = "▼";
+        ctxMenu.style.display = "none";
+    };
+
+    document.getElementById("ctx-kill-1").onclick = () => { if(token.qty > 1) token.qty--; else triggerDelete(index); save(); render(); ctxMenu.style.display = "none"; };
+    document.getElementById("ctx-kill-all").onclick = () => { triggerDelete(index); ctxMenu.style.display = "none"; };
+  }
+
+  function triggerDelete(index) {
+      lastDeletedState = { tokens: JSON.parse(JSON.stringify(tokens)), images: {...sessionImages} };
+      const tId = tokens[index].id;
+      delete sessionImages[tId];
+      tokens.splice(index, 1);
+      save(); render();
+      showToast("Token deleted.", () => { tokens = lastDeletedState.tokens; sessionImages = lastDeletedState.images; save(); render(); });
   }
 
   function positionMenu(x, y) {
     ctxMenu.style.display = "block";
     ctxMenu.style.left = `${Math.min(x, window.innerWidth - 220)}px`;
-    ctxMenu.style.top = `${Math.min(y, window.innerHeight - 150)}px`;
+    ctxMenu.style.top = `${Math.min(y, window.innerHeight - 200)}px`;
   }
 
   function showPresetContextMenu(x, y, p) {
@@ -578,36 +638,62 @@
   }
   document.addEventListener("click", (e) => { if (!e.target.closest("#context-menu")) ctxMenu.style.display = "none"; });
 
-  // --- FORM HANDLER ---
   document.getElementById("tokenForm").addEventListener("submit", (e) => {
     e.preventDefault();
+    const btn = document.getElementById("createBtn");
+    btn.disabled = true; setTimeout(() => btn.disabled = false, 1000);
+
+    if (editingTokenId) {
+        const t = tokens.find(tk => tk.id === editingTokenId);
+        if (t) {
+            t.name = document.getElementById("name").value;
+            t.color = document.getElementById("color").value;
+            t.power = parseInt(document.getElementById("power").value)||0;
+            t.toughness = parseInt(document.getElementById("toughness").value)||1;
+            t.haste = document.getElementById("haste").checked;
+            if (document.getElementById("isCardCopy").checked) { fetchTokenArt(t.id, t.name, true); }
+        }
+        editingTokenId = null;
+        btn.innerText = "Create Token";
+        save(); render();
+        document.getElementById("name").value = "";
+        toggleCustomPanel(false);
+        return;
+    }
+
     const id = crypto.randomUUID();
+    const isCardCopy = document.getElementById("isCardCopy").checked;
+
     const newToken = {
       id,
-      name: document.getElementById("name").value,
+      name: document.getElementById("name").value.trim(),
       qty: parseInt(document.getElementById("qty").value),
       color: document.getElementById("color").value,
       power: parseInt(document.getElementById("power").value)||0,
       toughness: parseInt(document.getElementById("toughness").value)||1,
       haste: document.getElementById("haste").checked,
       summoning: !document.getElementById("haste").checked,
-      tapped: false, counters: 0,
-      imagePath: null, scryfallUrl: null
+      tapped: false, counters: 0, keywords: [],
+      // SAFETY: ensure imagePath is string
+      imagePath: (selectedPreset && selectedPreset.imagePath) ? selectedPreset.imagePath : null,
+      scryfallUrl: null,
+      isCardCopy: isCardCopy
     };
+
+    // If user uploaded a file
     const file = document.getElementById("image").files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = () => { sessionImages[id] = reader.result; addTokenToBoard(newToken); toggleCustomPanel(false); };
       reader.readAsDataURL(file);
     } else {
-      if (selectedPreset) {
-          newToken.imagePath = selectedPreset.imagePath || `${newToken.name}.png`;
-          newToken.scryfallUrl = selectedPreset.scryfallUrl;
-          selectedPreset = null;
-      }
       addTokenToBoard(newToken); toggleCustomPanel(false);
     }
-    document.getElementById("name").value = ""; document.getElementById("name").focus();
+
+    selectedPreset = null; // Clear preset
+    document.getElementById("name").value = "";
+    document.getElementById("isCardCopy").checked = false;
+    document.getElementById("name").focus();
   });
 
   function handleNextTurn() {
@@ -615,7 +701,8 @@
     const consolidated = [];
     tokens.forEach(t => {
         const getImg = (token) => sessionImages[token.id] || token.imagePath || 'none';
-        const key = `${t.name}|${t.color}|${t.power}|${t.toughness}|${t.counters}|${t.haste}|${t.summoning}|${t.tapped}|${getImg(t)}`;
+        const kw = (token) => (token.keywords || []).sort().join(",");
+        const key = `${t.name}|${t.color}|${t.power}|${t.toughness}|${t.counters}|${t.haste}|${t.summoning}|${t.tapped}|${getImg(t)}|${kw(t)}`;
         const existing = consolidated.find(c => c.key === key);
         if (existing) {
             existing.token.qty += t.qty;
@@ -626,7 +713,6 @@
     save(); render();
   }
 
-  // --- PRESET RENDERER ---
   function getColorCode(c) {
     const map = { white: '#fffacd', blue: '#69c5ff', black: '#a9a9a9', red: '#ff6b6b', green: '#90ee90', colorless: '#d3d3d3', gold: '#d4af37' };
     return map[c] || '#fff';
@@ -635,29 +721,18 @@
   function renderPresets(filterText = "") {
       const picker = document.getElementById("presetPicker");
       picker.innerHTML = "";
-
       let keys = [];
       const term = filterText.toLowerCase().trim();
 
       if (!term) {
-          if (suggestedTokens.length > 0) {
-              picker.style.display = "grid";
-              keys = suggestedTokens;
-          } else {
-              picker.style.display = "block";
-              picker.innerHTML = `<div style="color:#666; font-size:14px; font-style:italic; padding:20px; text-align:center;">Start typing to find tokens...</div>`;
-              return;
-          }
+          if (suggestedTokens.length > 0) { picker.style.display = "grid"; keys = suggestedTokens; }
+          else { picker.style.display = "block"; picker.innerHTML = `<div style="color:#666; font-size:14px; font-style:italic; padding:20px; text-align:center;">Start typing to find tokens...</div>`; return; }
       } else {
           picker.style.display = "grid";
           keys = Object.keys(activePresets).sort().filter(key => activePresets[key].name.toLowerCase().includes(term));
       }
 
-      if (keys.length === 0) {
-           picker.style.display = "block";
-           picker.innerHTML = `<div style="color:#666; font-size:14px; padding:20px; text-align:center;">No tokens found.</div>`;
-           return;
-      }
+      if (keys.length === 0) { picker.style.display = "block"; picker.innerHTML = `<div style="color:#666; font-size:14px; padding:20px; text-align:center;">No tokens found.</div>`; return; }
 
       keys.forEach(key => {
         const p = activePresets[key];
@@ -676,7 +751,7 @@
           if (isLongPress) return;
           addTokenToBoard({
             id:crypto.randomUUID(), name:p.name, qty:1, color:p.color, power:p.power, toughness:p.toughness,
-            haste:false, summoning:true, tapped:false, counters:0,
+            haste:false, summoning:true, tapped:false, counters:0, keywords:[],
             imagePath: p.imagePath || `${p.name}.png`, scryfallUrl: p.scryfallUrl
           });
         };
