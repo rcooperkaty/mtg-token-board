@@ -29,7 +29,7 @@
     <li>Tap the input box in the sidebar that says <em>"Start typing to find tokens..."</em>.</li>
     <li>Type a name (e.g., "Goblin", "Treasure").</li>
     <li><strong>Tap the result</strong> (Left Click) to instantly spawn that token.</li>
-    <li><strong>Long Press (Right Click)</strong> a result to configure stats/quantity before adding.</li>
+    <li><strong>Double Tap (Right Click)</strong> a result to configure stats/quantity before adding.</li>
   </ul>
 <h2>📋 Default Presets</h2>
 <p>The app comes pre-loaded with <strong>27</strong> of the most common Commander tokens. You can add more by using the <strong>"Add Deck"</strong> feature.</p>
