@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <title>Commander Token Board</title>
-
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="TokenBoard">
@@ -80,8 +79,7 @@
 
     /* SPLASH SCREEN */
     #splash-overlay {
-        display: none; /* Hidden by default, JS enables it */
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.92); z-index: 6000;
         align-items: center; justify-content: center;
         padding: 20px; box-sizing: border-box; backdrop-filter: blur(8px);
@@ -133,14 +131,12 @@
     .token-art-layer {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background-size: cover; background-position: center; background-repeat: no-repeat;
-        z-index: 2; /* Sits on TOP of text */
-        border-radius: 4px;
+        z-index: 2; border-radius: 4px;
     }
     .token-text-layer {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; align-items: center; justify-content: center;
-        z-index: 1; /* Sits BEHIND art */
-        font-size: 40px; color: rgba(255,255,255,0.2); font-weight: 800;
+        z-index: 1; font-size: 40px; color: rgba(255,255,255,0.2); font-weight: 800;
     }
 
     .token-details { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; height: 28px; }
@@ -210,7 +206,7 @@
 <body>
 
 <header>
-  <h1>Commander Tokens <span class="version-tag">v4.5</span></h1>
+  <h1>Commander Tokens <span class="version-tag">v4.6</span></h1>
   <button id="menuBtn">☰</button>
 </header>
 
@@ -508,25 +504,44 @@
       card.className = `token ${t.tapped ? 'tapped' : ''}`;
       card.dataset.color = t.color;
 
-      let tokenTimer = null, tokenIsLongPress = false;
-      card.addEventListener("touchstart", (e) => {
-        tokenIsLongPress = false;
-        tokenTimer = setTimeout(() => { tokenIsLongPress = true; showTokenContextMenu({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }, t, index); }, 500);
-      }, {passive: true});
-      card.addEventListener("touchend", (e) => { clearTimeout(tokenTimer); if(tokenIsLongPress) e.preventDefault(); });
-      card.addEventListener("touchmove", () => clearTimeout(tokenTimer));
+      // --- DOUBLE TAP LOGIC ---
+      let clickTimer = null;
+      let lastClickTime = 0;
 
       card.addEventListener("click", (e) => {
-        if(e.target.tagName === "BUTTON" || tokenIsLongPress) return;
-        if (t.summoning && !t.tapped) { card.classList.add("shake"); setTimeout(() => card.classList.remove("shake"), 300); return; }
-        if (t.qty === 1) { t.tapped = !t.tapped; } else {
-            t.qty--;
-            const single = JSON.parse(JSON.stringify(t));
-            single.qty = 1; single.tapped = !t.tapped; single.id = crypto.randomUUID();
-            if(sessionImages[t.id]) sessionImages[single.id] = sessionImages[t.id];
-            addTokenToBoard(single); return;
+        if(e.target.tagName === "BUTTON") return;
+
+        const currentTime = new Date().getTime();
+        const timeDiff = currentTime - lastClickTime;
+
+        if (timeDiff < 300 && timeDiff > 0) {
+            // DOUBLE TAP -> Context Menu
+            clearTimeout(clickTimer);
+            clickTimer = null;
+            lastClickTime = 0;
+            showTokenContextMenu({ clientX: e.clientX, clientY: e.clientY }, t, index);
+        } else {
+            // SINGLE TAP -> Tap/Untap
+            lastClickTime = currentTime;
+            clickTimer = setTimeout(() => {
+                if (t.summoning && !t.tapped) {
+                    card.classList.add("shake"); setTimeout(() => card.classList.remove("shake"), 300);
+                    return;
+                }
+                if (t.qty === 1) {
+                    t.tapped = !t.tapped;
+                } else {
+                    t.qty--;
+                    const single = JSON.parse(JSON.stringify(t));
+                    single.qty = 1; single.tapped = !t.tapped; single.id = crypto.randomUUID();
+                    if(sessionImages[t.id]) sessionImages[single.id] = sessionImages[t.id];
+                    addTokenToBoard(single);
+                    return;
+                }
+                save(); render();
+                clickTimer = null;
+            }, 250);
         }
-        save(); render();
       });
 
       card.addEventListener("contextmenu", (e) => { e.preventDefault(); showTokenContextMenu(e, t, index); });
